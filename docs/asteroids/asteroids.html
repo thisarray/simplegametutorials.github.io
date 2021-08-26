@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>asteroids</title>
+  <script src="../../jsgame0.js"></script>
+  <style type="text/css" media="screen">
+body {
+  background-color: white;
+  color: black;
+}
+.hidden {
+  display: none;
+}
+#original {
+  margin-left: 1em;
+}
+  </style>
+</head>
+
+<body>
+
+<main>
+<h1>asteroids</h1>
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
+<h2>Original Python code</h2>
+
+<pre id="original"><code>
+import math
+import random
+
+arena_width = 800
+arena_height = 600
+
+ship_radius = 30
+
+bullet_timer_limit = 0.5
+bullet_radius = 5
+
+asteroid_stages = [
+    {
+        &#x27;speed&#x27;: 120,
+        &#x27;radius&#x27;: 15,
+    },
+    {
+        &#x27;speed&#x27;: 70,
+        &#x27;radius&#x27;: 30,
+    },
+    {
+        &#x27;speed&#x27;: 50,
+        &#x27;radius&#x27;: 50,
+    },
+    {
+        &#x27;speed&#x27;: 20,
+        &#x27;radius&#x27;: 80,
+    },
+]
+
+def reset():
+    global ship_x
+    global ship_y
+    global ship_speed_x
+    global ship_speed_y
+    global ship_angle
+    global bullet_timer
+    global bullets
+    global asteroids
+
+    ship_x = arena_width / 2
+    ship_y = arena_height / 2
+    ship_speed_x = 0
+    ship_speed_y = 0
+    ship_angle = 0
+
+    bullets = []
+    bullet_timer = bullet_timer_limit
+
+    asteroids = [
+        {
+            &#x27;x&#x27;: 100,
+            &#x27;y&#x27;: 100,
+        },
+        {
+            &#x27;x&#x27;: arena_width - 100,
+            &#x27;y&#x27;: 100,
+        },
+        {
+            &#x27;x&#x27;: arena_width / 2,
+            &#x27;y&#x27;: arena_height - 100,
+        }
+    ]
+
+    for asteroid in asteroids:
+        asteroid[&#x27;angle&#x27;] = random.random() * (2 * math.pi)
+        asteroid[&#x27;stage&#x27;] = len(asteroid_stages) - 1
+
+reset()
+
+def update(dt):
+    global ship_x
+    global ship_y
+    global ship_speed_x
+    global ship_speed_y
+    global ship_angle
+    global bullet_timer
+
+    turn_speed = 10
+
+    if keyboard.right:
+        ship_angle += turn_speed * dt
+
+    if keyboard.left:
+        ship_angle -= turn_speed * dt
+
+    ship_angle %= 2 * math.pi
+
+    if keyboard.up:
+        ship_speed = 100
+        ship_speed_x += math.cos(ship_angle) * ship_speed * dt
+        ship_speed_y += math.sin(ship_angle) * ship_speed * dt
+
+    ship_x += ship_speed_x * dt
+    ship_y += ship_speed_y * dt
+
+    ship_x %= arena_width
+    ship_y %= arena_height
+
+    def are_circles_intersecting(a_x, a_y, a_radius, b_x, b_y, b_radius):
+        return (a_x - b_x)**2 + (a_y - b_y)**2 &lt;= (a_radius + b_radius)**2
+
+    for bullet in bullets.copy():
+        bullet[&#x27;time_left&#x27;] -= dt
+
+        if bullet[&#x27;time_left&#x27;] &lt;= 0:
+            bullets.remove(bullet)
+            continue
+
+        bullet_speed = 500
+        bullet[&#x27;x&#x27;] += math.cos(bullet[&#x27;angle&#x27;]) * bullet_speed * dt
+        bullet[&#x27;y&#x27;] += math.sin(bullet[&#x27;angle&#x27;]) * bullet_speed * dt
+        bullet[&#x27;x&#x27;] %= arena_width
+        bullet[&#x27;y&#x27;] %= arena_height
+
+        for asteroid in asteroids.copy():
+            if are_circles_intersecting(
+                bullet[&#x27;x&#x27;], bullet[&#x27;y&#x27;], bullet_radius,
+                asteroid[&#x27;x&#x27;], asteroid[&#x27;y&#x27;],
+                asteroid_stages[asteroid[&#x27;stage&#x27;]][&#x27;radius&#x27;]
+            ):
+                bullets.remove(bullet)
+
+                if asteroid[&#x27;stage&#x27;] &gt; 0:
+                    angle1 = random.random() * (2 * math.pi)
+                    angle2 = (angle1 - math.pi) % (2 * math.pi)
+
+                    asteroids.append({
+                        &#x27;x&#x27;: asteroid[&#x27;x&#x27;],
+                        &#x27;y&#x27;: asteroid[&#x27;y&#x27;],
+                        &#x27;angle&#x27;: angle1,
+                        &#x27;stage&#x27;: asteroid[&#x27;stage&#x27;] - 1
+                    })
+                    asteroids.append({
+                        &#x27;x&#x27;: asteroid[&#x27;x&#x27;],
+                        &#x27;y&#x27;: asteroid[&#x27;y&#x27;],
+                        &#x27;angle&#x27;: angle2,
+                        &#x27;stage&#x27;: asteroid[&#x27;stage&#x27;] - 1
+                    })
+
+                asteroids.remove(asteroid)
+                break
+
+    bullet_timer += dt
+
+    if keyboard.S:
+        if bullet_timer &gt;= bullet_timer_limit:
+            bullet_timer = 0
+
+            bullets.append({
+                &#x27;x&#x27;: ship_x + math.cos(ship_angle) * ship_radius,
+                &#x27;y&#x27;: ship_y + math.sin(ship_angle) * ship_radius,
+                &#x27;angle&#x27;: ship_angle,
+                &#x27;time_left&#x27;: 4,
+            })
+
+    for asteroid in asteroids:
+        asteroid_speed = asteroid_stages[asteroid[&#x27;stage&#x27;]][&#x27;speed&#x27;]
+        asteroid[&#x27;x&#x27;] += math.cos(asteroid[&#x27;angle&#x27;]) * asteroid_speed * dt
+        asteroid[&#x27;y&#x27;] += math.sin(asteroid[&#x27;angle&#x27;]) * asteroid_speed * dt
+        asteroid[&#x27;x&#x27;] %= arena_width
+        asteroid[&#x27;y&#x27;] %= arena_height
+
+        if are_circles_intersecting(
+            ship_x, ship_y, ship_radius,
+            asteroid[&#x27;x&#x27;], asteroid[&#x27;y&#x27;],
+            asteroid_stages[asteroid[&#x27;stage&#x27;]][&#x27;radius&#x27;]
+        ):
+            reset()
+            break
+
+    if len(asteroids) == 0:
+        reset()
+
+def draw():
+    screen.fill((0, 0, 0))
+
+    for y in range(-1, 2):
+        for x in range(-1, 2):
+            offset_x = x * arena_width
+            offset_y = y * arena_height
+
+            screen.draw.filled_circle(
+                (ship_x + offset_x, ship_y + offset_y),
+                ship_radius, color=(0, 0, 255)
+            )
+
+            ship_circle_distance = 20
+            screen.draw.filled_circle((
+                ship_x + offset_x +
+                    math.cos(ship_angle) * ship_circle_distance,
+                ship_y + offset_y +
+                    math.sin(ship_angle) * ship_circle_distance),
+                5, color=(0, 255, 255)
+            )
+
+            for bullet in bullets:
+                screen.draw.filled_circle(
+                    (bullet[&#x27;x&#x27;] + offset_x, bullet[&#x27;y&#x27;] + offset_y),
+                    bullet_radius, color=(0, 255, 0)
+                )
+
+            for asteroid in asteroids:
+                screen.draw.filled_circle((
+                    asteroid[&#x27;x&#x27;] + offset_x, asteroid[&#x27;y&#x27;] + offset_y),
+                    asteroid_stages[asteroid[&#x27;stage&#x27;]][&#x27;radius&#x27;],
+                    color=(255, 255, 0)
+                )
+
+WIDTH = 800
+HEIGHT = 600
+</code></pre>
+</main>
+
+<script>
+/*
+ * Return the result of the modulo operation dividend modulo divisor.
+ *
+ * The remainder operator (%) in JavaScript always takes the sign of the dividend.
+ * This trips you up when you come from Python and expect it to be a
+ * modulo operator for a negative dividend.
+ * This function correctly returns the non-negative remainder like Python.
+ */
+function modulo(dividend, divisor) {
+  return (((dividend % divisor) + divisor) % divisor);
+}
+
+WIDTH = 800;
+HEIGHT = 600;
+
+const SHIP_RADIUS = 30;
+
+const BULLET_TIMER_LIMIT = 0.5;
+const BULLET_RADIUS = 5;
+
+const ASTEROID_STAGES = [
+  {
+    'speed': 120,
+    'radius': 15
+  },
+  {
+    'speed': 70,
+    'radius': 30
+  },
+  {
+    'speed': 50,
+    'radius': 50
+  },
+  {
+    'speed': 20,
+    'radius': 80
+  }
+];
+
+var ship_x, ship_y, ship_speed_x, ship_speed_y, ship_angle, bullet_timer, bullets, asteroids;
+
+function reset() {
+  ship_x = WIDTH / 2;
+  ship_y = HEIGHT / 2;
+  ship_speed_x = 0;
+  ship_speed_y = 0;
+  ship_angle = 0;
+
+  bullets = [];
+  bullet_timer = BULLET_TIMER_LIMIT;
+
+  asteroids = [
+    {
+      'x': 100,
+      'y': 100
+    },
+    {
+      'x': WIDTH - 100,
+      'y': 100
+    },
+    {
+      'x': WIDTH / 2,
+      'y': HEIGHT - 100
+    }
+  ];
+
+  for (let asteroid of asteroids) {
+    asteroid['angle'] = Math.random() * (2 * Math.PI);
+    asteroid['stage'] = ASTEROID_STAGES.length - 1;
+  }
+}
+
+function update(dt) {
+  let turn_speed = 10,
+      ship_speed = 100;
+
+  if (keyboard[keys.RIGHT]) {
+    ship_angle += turn_speed * dt;
+  }
+
+  if (keyboard[keys.LEFT]) {
+    ship_angle -= turn_speed * dt;
+  }
+
+  ship_angle = modulo(ship_angle, 2 * Math.PI);
+
+  if (keyboard[keys.UP]) {
+    ship_speed_x += Math.cos(ship_angle) * ship_speed * dt;
+    ship_speed_y += Math.sin(ship_angle) * ship_speed * dt;
+  }
+
+  ship_x += ship_speed_x * dt;
+  ship_y += ship_speed_y * dt;
+
+  ship_x = modulo(ship_x, WIDTH);
+  ship_y = modulo(ship_y, HEIGHT);
+
+  function are_circles_intersecting(a_x, a_y, a_radius, b_x, b_y, b_radius) {
+    return ((((a_x - b_x) * (a_x - b_x)) + ((a_y - b_y) * (a_y - b_y))) <= ((a_radius + b_radius) * (a_radius + b_radius)));
+  }
+
+  for (let i = (bullets.length - 1); i > -1; i--) {
+    bullets[i]['time_left'] -= dt;
+
+    if (bullets[i]['time_left'] <= 0) {
+      bullets.splice(i, 1);
+      continue;
+    }
+
+    let bullet_speed = 500;
+    bullets[i]['x'] += Math.cos(bullets[i]['angle']) * bullet_speed * dt;
+    bullets[i]['y'] += Math.sin(bullets[i]['angle']) * bullet_speed * dt;
+    bullets[i]['x'] = modulo(bullets[i]['x'], WIDTH);
+    bullets[i]['y'] = modulo(bullets[i]['y'], HEIGHT);
+
+    for (let j = (asteroids.length - 1); j > -1; j--) {
+      if (are_circles_intersecting(
+        bullets[i]['x'], bullets[i]['y'], BULLET_RADIUS,
+        asteroids[j]['x'], asteroids[j]['y'],
+        ASTEROID_STAGES[asteroids[j]['stage']]['radius']
+      )) {
+        bullets.splice(i, 1);
+
+        if (asteroids[j]['stage'] > 0) {
+          let angle1 = Math.random() * (2 * Math.PI),
+              angle2 = modulo(angle1 - Math.PI, 2 * Math.PI);
+
+          asteroids.push({
+            'x': asteroids[j]['x'],
+            'y': asteroids[j]['y'],
+            'angle': angle1,
+            'stage': asteroids[j]['stage'] - 1
+          });
+          asteroids.push({
+            'x': asteroids[j]['x'],
+            'y': asteroids[j]['y'],
+            'angle': angle2,
+            'stage': asteroids[j]['stage'] - 1
+          });
+        }
+
+        asteroids.splice(j, 1);
+        break;
+      }
+    }
+  }
+
+  bullet_timer += dt;
+
+  if (keyboard[keys.S]) {
+    if (bullet_timer >= BULLET_TIMER_LIMIT) {
+      bullet_timer = 0;
+
+      bullets.push({
+        'x': ship_x + (Math.cos(ship_angle) * SHIP_RADIUS),
+        'y': ship_y + (Math.sin(ship_angle) * SHIP_RADIUS),
+        'angle': ship_angle,
+        'time_left': 4
+      });
+    }
+  }
+
+  for (let asteroid of asteroids) {
+    let asteroid_speed = ASTEROID_STAGES[asteroid['stage']]['speed'];
+    asteroid['x'] += Math.cos(asteroid['angle']) * asteroid_speed * dt;
+    asteroid['y'] += Math.sin(asteroid['angle']) * asteroid_speed * dt;
+    asteroid['x'] = modulo(asteroid['x'], WIDTH);
+    asteroid['y'] = modulo(asteroid['y'], HEIGHT);
+
+    if (are_circles_intersecting(
+      ship_x, ship_y, SHIP_RADIUS,
+      asteroid['x'], asteroid['y'],
+      ASTEROID_STAGES[asteroid['stage']]['radius']
+    )) {
+      reset();
+      break;
+    }
+  }
+
+  if (asteroids.length === 0) {
+    reset();
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  for (let y = -1; y < 2; y++) {
+    for (let x = -1; x < 2; x++) {
+      let offset_x = x * WIDTH,
+          offset_y = y * HEIGHT,
+          ship_circle_distance = 20;
+
+      screen.draw.filled_circle(
+        [ship_x + offset_x, ship_y + offset_y],
+        SHIP_RADIUS, [0, 0, 255]
+      );
+
+      screen.draw.filled_circle([
+        ship_x + offset_x + (Math.cos(ship_angle) * ship_circle_distance),
+        ship_y + offset_y + (Math.sin(ship_angle) * ship_circle_distance)],
+        5, [0, 255, 255]
+      );
+
+      for (let bullet of bullets) {
+        screen.draw.filled_circle(
+          [bullet['x'] + offset_x, bullet['y'] + offset_y],
+          BULLET_RADIUS, [0, 255, 0]
+        );
+      }
+
+      for (let asteroid of asteroids) {
+        screen.draw.filled_circle([
+          asteroid['x'] + offset_x, asteroid['y'] + offset_y],
+          ASTEROID_STAGES[asteroid['stage']]['radius'],
+          [255, 255, 0]
+        );
+      }
+    }
+  }
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
