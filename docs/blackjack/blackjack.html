@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>blackjack</title>
+  <script src="../../jsgame0.js"></script>
+  <style type="text/css" media="screen">
+body {
+  background-color: white;
+  color: black;
+}
+.hidden {
+  display: none;
+}
+#original {
+  margin-left: 1em;
+}
+  </style>
+</head>
+
+<body>
+<section id="imageLoader" class="hidden">
+  <img class="hidden" src="images/card_face_down.png" alt="card_face_down" data-name="card_face_down">
+  <img class="hidden" src="images/club_1.png" alt="club_1" data-name="club_1">
+  <img class="hidden" src="images/club_10.png" alt="club_10" data-name="club_10">
+  <img class="hidden" src="images/club_11.png" alt="club_11" data-name="club_11">
+  <img class="hidden" src="images/club_12.png" alt="club_12" data-name="club_12">
+  <img class="hidden" src="images/club_13.png" alt="club_13" data-name="club_13">
+  <img class="hidden" src="images/club_2.png" alt="club_2" data-name="club_2">
+  <img class="hidden" src="images/club_3.png" alt="club_3" data-name="club_3">
+  <img class="hidden" src="images/club_4.png" alt="club_4" data-name="club_4">
+  <img class="hidden" src="images/club_5.png" alt="club_5" data-name="club_5">
+  <img class="hidden" src="images/club_6.png" alt="club_6" data-name="club_6">
+  <img class="hidden" src="images/club_7.png" alt="club_7" data-name="club_7">
+  <img class="hidden" src="images/club_8.png" alt="club_8" data-name="club_8">
+  <img class="hidden" src="images/club_9.png" alt="club_9" data-name="club_9">
+  <img class="hidden" src="images/diamond_1.png" alt="diamond_1" data-name="diamond_1">
+  <img class="hidden" src="images/diamond_10.png" alt="diamond_10" data-name="diamond_10">
+  <img class="hidden" src="images/diamond_11.png" alt="diamond_11" data-name="diamond_11">
+  <img class="hidden" src="images/diamond_12.png" alt="diamond_12" data-name="diamond_12">
+  <img class="hidden" src="images/diamond_13.png" alt="diamond_13" data-name="diamond_13">
+  <img class="hidden" src="images/diamond_2.png" alt="diamond_2" data-name="diamond_2">
+  <img class="hidden" src="images/diamond_3.png" alt="diamond_3" data-name="diamond_3">
+  <img class="hidden" src="images/diamond_4.png" alt="diamond_4" data-name="diamond_4">
+  <img class="hidden" src="images/diamond_5.png" alt="diamond_5" data-name="diamond_5">
+  <img class="hidden" src="images/diamond_6.png" alt="diamond_6" data-name="diamond_6">
+  <img class="hidden" src="images/diamond_7.png" alt="diamond_7" data-name="diamond_7">
+  <img class="hidden" src="images/diamond_8.png" alt="diamond_8" data-name="diamond_8">
+  <img class="hidden" src="images/diamond_9.png" alt="diamond_9" data-name="diamond_9">
+  <img class="hidden" src="images/heart_1.png" alt="heart_1" data-name="heart_1">
+  <img class="hidden" src="images/heart_10.png" alt="heart_10" data-name="heart_10">
+  <img class="hidden" src="images/heart_11.png" alt="heart_11" data-name="heart_11">
+  <img class="hidden" src="images/heart_12.png" alt="heart_12" data-name="heart_12">
+  <img class="hidden" src="images/heart_13.png" alt="heart_13" data-name="heart_13">
+  <img class="hidden" src="images/heart_2.png" alt="heart_2" data-name="heart_2">
+  <img class="hidden" src="images/heart_3.png" alt="heart_3" data-name="heart_3">
+  <img class="hidden" src="images/heart_4.png" alt="heart_4" data-name="heart_4">
+  <img class="hidden" src="images/heart_5.png" alt="heart_5" data-name="heart_5">
+  <img class="hidden" src="images/heart_6.png" alt="heart_6" data-name="heart_6">
+  <img class="hidden" src="images/heart_7.png" alt="heart_7" data-name="heart_7">
+  <img class="hidden" src="images/heart_8.png" alt="heart_8" data-name="heart_8">
+  <img class="hidden" src="images/heart_9.png" alt="heart_9" data-name="heart_9">
+  <img class="hidden" src="images/spade_1.png" alt="spade_1" data-name="spade_1">
+  <img class="hidden" src="images/spade_10.png" alt="spade_10" data-name="spade_10">
+  <img class="hidden" src="images/spade_11.png" alt="spade_11" data-name="spade_11">
+  <img class="hidden" src="images/spade_12.png" alt="spade_12" data-name="spade_12">
+  <img class="hidden" src="images/spade_13.png" alt="spade_13" data-name="spade_13">
+  <img class="hidden" src="images/spade_2.png" alt="spade_2" data-name="spade_2">
+  <img class="hidden" src="images/spade_3.png" alt="spade_3" data-name="spade_3">
+  <img class="hidden" src="images/spade_4.png" alt="spade_4" data-name="spade_4">
+  <img class="hidden" src="images/spade_5.png" alt="spade_5" data-name="spade_5">
+  <img class="hidden" src="images/spade_6.png" alt="spade_6" data-name="spade_6">
+  <img class="hidden" src="images/spade_7.png" alt="spade_7" data-name="spade_7">
+  <img class="hidden" src="images/spade_8.png" alt="spade_8" data-name="spade_8">
+  <img class="hidden" src="images/spade_9.png" alt="spade_9" data-name="spade_9">
+</section>
+
+<main>
+<h1>blackjack</h1>
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
+<h2>Original Python code</h2>
+
+<pre id="original"><code>
+import pygame
+import random
+
+def take_card(hand):
+    hand.append(deck.pop(random.randrange(len(deck))))
+
+def reset():
+    global deck
+    global player_hand
+    global dealer_hand
+    global round_over
+
+    deck = []
+    for suit in (&#x27;club&#x27;, &#x27;diamond&#x27;, &#x27;heart&#x27;, &#x27;spade&#x27;):
+        for rank in range(1, 14):
+            deck.append({&#x27;suit&#x27;: suit, &#x27;rank&#x27;: rank})
+
+    player_hand = []
+    take_card(player_hand)
+    take_card(player_hand)
+
+    dealer_hand = []
+    take_card(dealer_hand)
+    take_card(dealer_hand)
+
+    round_over = False
+
+reset()
+
+def get_total(hand):
+    total = 0
+    has_ace = False
+
+    for card in hand:
+        if card[&#x27;rank&#x27;] &gt; 10:
+            total += 10
+        else:
+            total += card[&#x27;rank&#x27;]
+
+        if card[&#x27;rank&#x27;] == 1:
+            has_ace = True
+
+    if has_ace and total &lt;= 11:
+        total += 10
+
+    return total
+
+button_y = 230
+button_height = 25
+text_offset_y = 6
+
+button_hit = {
+    &#x27;x&#x27;: 10,
+    &#x27;y&#x27;: button_y,
+    &#x27;width&#x27;: 53,
+    &#x27;height&#x27;: 25,
+    &#x27;text&#x27;: &#x27;Hit!&#x27;,
+    &#x27;text_offset_x&#x27;: 13,
+    &#x27;text_offset_y&#x27;: text_offset_y,
+}
+
+button_stand = {
+    &#x27;x&#x27;: 70,
+    &#x27;y&#x27;: button_y,
+    &#x27;width&#x27;: 53,
+    &#x27;height&#x27;: 25,
+    &#x27;text&#x27;: &#x27;Stand&#x27;,
+    &#x27;text_offset_x&#x27;: 4,
+    &#x27;text_offset_y&#x27;: text_offset_y,
+}
+
+button_play_again = {
+    &#x27;x&#x27;: 10,
+    &#x27;y&#x27;: button_y,
+    &#x27;width&#x27;: 113,
+    &#x27;height&#x27;: 25,
+    &#x27;text&#x27;: &#x27;Play again&#x27;,
+    &#x27;text_offset_x&#x27;: 17,
+    &#x27;text_offset_y&#x27;: text_offset_y,
+}
+
+def is_mouse_in_button(button):
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+
+    return (
+        mouse_x &gt;= button[&#x27;x&#x27;]
+        and mouse_x &lt; button[&#x27;x&#x27;] + button[&#x27;width&#x27;]
+        and mouse_y &gt;= button[&#x27;y&#x27;]
+        and mouse_y &lt; button[&#x27;y&#x27;] + button[&#x27;height&#x27;]
+    )
+
+def update():
+    pass
+
+def on_mouse_up():
+    global round_over
+
+    if not round_over:
+        if is_mouse_in_button(button_hit):
+            take_card(player_hand)
+            if get_total(player_hand) &gt;= 21:
+                round_over = True
+        elif is_mouse_in_button(button_stand):
+            round_over = True
+
+        if round_over:
+            while get_total(dealer_hand) &lt; 17:
+                take_card(dealer_hand)
+    elif is_mouse_in_button(button_play_again):
+        reset()
+
+def draw():
+    screen.fill((255, 255, 255))
+
+    card_spacing = 60
+    margin_x = 10
+
+    for card_index, card in enumerate(dealer_hand):
+        image = card[&#x27;suit&#x27;] + &#x27;_&#x27; + str(card[&#x27;rank&#x27;])
+        if not round_over and card_index == 0:
+            image = &#x27;card_face_down&#x27;
+        screen.blit(image, (card_index * card_spacing + margin_x, 30))
+
+    for card_index, card in enumerate(player_hand):
+        screen.blit(card[&#x27;suit&#x27;] + &#x27;_&#x27; + str(card[&#x27;rank&#x27;]),
+            (card_index * card_spacing + margin_x, 140))
+
+    if round_over:
+        screen.draw.text(&#x27;Total: &#x27; + str(get_total(dealer_hand)),
+            (margin_x, 10), color=(0, 0, 0))
+    else:
+        screen.draw.text(&#x27;Total: ?&#x27;, (margin_x, 10), color=(0, 0, 0))
+
+    screen.draw.text(&#x27;Total: &#x27; + str(get_total(player_hand)),
+        (margin_x, 120), color=(0, 0, 0))
+
+    if round_over:
+        def has_hand_won(this_hand, other_hand):
+            return (
+                get_total(this_hand) &lt;= 21
+                and (
+                    get_total(other_hand) &gt; 21
+                    or get_total(this_hand) &gt; get_total(other_hand)
+                )
+            )
+
+        def draw_winner(message):
+            screen.draw.text(message, (margin_x, 268), color=(0, 0, 0))
+
+        if has_hand_won(player_hand, dealer_hand):
+            draw_winner(&#x27;Player wins&#x27;)
+        elif has_hand_won(dealer_hand, player_hand):
+            draw_winner(&#x27;Dealer wins&#x27;)
+        else:
+            draw_winner(&#x27;Draw&#x27;)
+
+    def draw_button(button):
+        if is_mouse_in_button(button):
+            color = (255, 202, 75)
+        else:
+            color = (255, 127, 57)
+
+        screen.draw.filled_rect(
+            Rect(button[&#x27;x&#x27;], button[&#x27;y&#x27;], button[&#x27;width&#x27;], button[&#x27;height&#x27;]),
+            color=color
+        )
+        screen.draw.text(
+            button[&#x27;text&#x27;],
+            (button[&#x27;x&#x27;] + button[&#x27;text_offset_x&#x27;],
+            button[&#x27;y&#x27;] + button[&#x27;text_offset_y&#x27;])
+        )
+
+    if not round_over:
+        draw_button(button_hit)
+        draw_button(button_stand)
+    else:
+        draw_button(button_play_again)
+
+WIDTH = 500
+HEIGHT = 300
+</code></pre>
+</main>
+
+<script>
+WIDTH = 500;
+HEIGHT = 300;
+
+const BUTTON_Y = 230;
+const BUTTON_HEIGHT = 25;
+const TEXT_OFFSET_Y = 6;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+function take_card(hand) {
+  let index = getRandomInteger(0, deck.length),
+      card = deck.splice(index, 1)[0];
+  hand.push(card);
+}
+
+var deck, player_hand, dealer_hand, round_over, mouse_x, mouse_y;
+
+function reset() {
+  deck = [];
+  for (let suit of ['club', 'diamond', 'heart', 'spade']) {
+    for (let rank = 1; rank < 14; rank++) {
+      deck.push({'suit': suit, 'rank': rank});
+    }
+  }
+
+  player_hand = [];
+  take_card(player_hand);
+  take_card(player_hand);
+
+  dealer_hand = [];
+  take_card(dealer_hand);
+  take_card(dealer_hand);
+
+  round_over = false;
+
+  mouse_x = 0;
+  mouse_y = 0;
+}
+
+function get_total(hand) {
+  let total = 0,
+      has_ace = false;
+
+  for (let card of hand) {
+    if (card['rank'] > 10) {
+      total += 10;
+    }
+    else {
+      total += card['rank'];
+    }
+
+    if (card['rank'] === 1) {
+      has_ace = true;
+    }
+  }
+
+  if (has_ace && (total <= 11)) {
+    total += 10;
+  }
+
+  return total;
+}
+
+const HIT = new Rect(10, BUTTON_Y, 53, 25);
+HIT.text = 'Hit!';
+HIT.text_offset_x = 13;
+HIT.text_offset_y = TEXT_OFFSET_Y;
+
+const STAND = new Rect(70, BUTTON_Y, 53, 25);
+STAND.text = 'Stand';
+STAND.text_offset_x = 4;
+STAND.text_offset_y = TEXT_OFFSET_Y;
+
+const AGAIN = new Rect(10, BUTTON_Y, 113, 25);
+AGAIN.text = 'Play again';
+AGAIN.text_offset_x = 17;
+AGAIN.text_offset_y = TEXT_OFFSET_Y;
+
+function on_mouse_move(pos, delta, buttons) {
+  [mouse_x, mouse_y] = pos;
+}
+
+function on_mouse_up(pos, buttons) {
+  [mouse_x, mouse_y] = pos;
+
+  if (!round_over) {
+    if (HIT.collidepoint([mouse_x, mouse_y])) {
+      take_card(player_hand);
+      if (get_total(player_hand) >= 21) {
+        round_over = true;
+      }
+    }
+    else if (STAND.collidepoint([mouse_x, mouse_y])) {
+      round_over = true;
+    }
+
+    if (round_over) {
+      while (get_total(dealer_hand) < 17) {
+        take_card(dealer_hand);
+      }
+    }
+  }
+  else if (AGAIN.collidepoint([mouse_x, mouse_y])) {
+    reset();
+  }
+}
+
+function draw() {
+  screen.fill([255, 255, 255]);
+
+  const card_spacing = 60;
+  const margin_x = 10;
+
+  let card_index = 0,
+      image;
+  for (let card of dealer_hand) {
+    image = card['suit'] + '_' + card['rank'];
+    if ((!round_over) && (card_index === 0)) {
+      image = 'card_face_down';
+    }
+    screen.blit(image, [(card_index * card_spacing) + margin_x, 30]);
+    card_index++;
+  }
+
+  card_index = 0;
+  for (let card of player_hand) {
+    screen.blit(card['suit'] + '_' + card['rank'],
+      [(card_index * card_spacing) + margin_x, 140]);
+    card_index++;
+  }
+
+  if (round_over) {
+    screen.draw.text('Total: ' + get_total(dealer_hand), {
+      pos: [margin_x, 10],
+      color: [0, 0, 0]
+    });
+  }
+  else {
+    screen.draw.text('Total: ?', {
+      pos: [margin_x, 10],
+      color: [0, 0, 0]
+    });
+  }
+
+  screen.draw.text('Total: ' + get_total(player_hand), {
+    pos: [margin_x, 120],
+    color: [0, 0, 0]
+  });
+
+  if (round_over) {
+    function has_hand_won(this_hand, other_hand) {
+      return (
+        (get_total(this_hand) <= 21)
+        && (
+          (get_total(other_hand) > 21)
+          || (get_total(this_hand) > get_total(other_hand))
+        )
+      );
+    }
+
+    function draw_winner(message) {
+      screen.draw.text(message, {
+        pos: [margin_x, 268],
+        color: [0, 0, 0]
+      });
+    }
+
+    if (has_hand_won(player_hand, dealer_hand)) {
+      draw_winner('Player wins');
+    }
+    else if (has_hand_won(dealer_hand, player_hand)) {
+      draw_winner('Dealer wins');
+    }
+    else {
+      draw_winner('Draw');
+    }
+  }
+
+  function draw_button(button) {
+    let color;
+    if (button.collidepoint([mouse_x, mouse_y])) {
+      color = [255, 202, 75];
+    }
+    else {
+      color = [255, 127, 57];
+    }
+
+    screen.draw.filled_rect(
+      button,
+      color
+    );
+    screen.draw.textbox(
+      button.text, button, {
+        pos: [button.x + button.text_offset_x, button.y + button.text_offset_y]
+      }
+    );
+  }
+
+  if (!round_over) {
+    draw_button(HIT);
+    draw_button(STAND);
+  }
+  else {
+    draw_button(AGAIN);
+  }
+}
+
+window.addEventListener('load', (event) => {
+  images.LOAD('#imageLoader img');
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
