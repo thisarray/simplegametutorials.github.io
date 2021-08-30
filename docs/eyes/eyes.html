@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eyes</title>
+  <script src="../../jsgame0.js"></script>
+  <style type="text/css" media="screen">
+body {
+  background-color: white;
+  color: black;
+}
+.hidden {
+  display: none;
+}
+#original {
+  margin-left: 1em;
+}
+  </style>
+</head>
+
+<body>
+
+<main>
+<h1>eyes</h1>
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
+<h2>Original Python code</h2>
+
+<pre id="original"><code>
+import pygame
+import math
+
+def update():
+    pass
+
+def draw():
+    screen.fill((0, 0, 0))
+
+    def draw_eye(eye_x, eye_y):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        distance_x = mouse_x - eye_x
+        distance_y = mouse_y - eye_y
+        distance = min(math.sqrt(distance_x**2 + distance_y**2), 30)
+        angle = math.atan2(distance_y, distance_x)
+
+        pupil_x = eye_x + (math.cos(angle) * distance)
+        pupil_y = eye_y + (math.sin(angle) * distance)
+
+        screen.draw.filled_circle((eye_x, eye_y), 50, color=(255, 255, 255))
+        screen.draw.filled_circle((pupil_x, pupil_y), 15, color=(0, 0, 100))
+
+    draw_eye(200, 200)
+    draw_eye(330, 200)
+
+WIDTH = 530
+HEIGHT = 400
+</code></pre>
+</main>
+
+<script>
+WIDTH = 530;
+HEIGHT = 400;
+
+var mouse_x, mouse_y;
+
+function reset() {
+  mouse_x = 0;
+  mouse_y = 0;
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  function draw_eye(eye_x, eye_y) {
+    let distance_x = mouse_x - eye_x,
+        distance_y = mouse_y - eye_y,
+        distance = Math.min(Math.sqrt((distance_x * distance_x) + (distance_y * distance_y)), 30),
+        angle = Math.atan2(distance_y, distance_x),
+
+        pupil_x = eye_x + (Math.cos(angle) * distance),
+        pupil_y = eye_y + (Math.sin(angle) * distance);
+
+    screen.draw.filled_circle([eye_x, eye_y], 50, [255, 255, 255]);
+    screen.draw.filled_circle([pupil_x, pupil_y], 15, [0, 0, 100]);
+  }
+
+  draw_eye(200, 200);
+  draw_eye(330, 200);
+}
+
+function on_mouse_move(pos, delta, buttons) {
+  [mouse_x, mouse_y] = pos;
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
