@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>flowers</title>
+  <script src="../../jsgame0.js"></script>
+  <style type="text/css" media="screen">
+body {
+  background-color: white;
+  color: black;
+}
+.hidden {
+  display: none;
+}
+#original {
+  margin-left: 1em;
+}
+  </style>
+</head>
+
+<body>
+<section id="imageLoader" class="hidden">
+  <img class="hidden" src="images/covered.png" alt="covered" data-name="covered">
+  <img class="hidden" src="images/covered_highlighted.png" alt="covered_highlighted" data-name="covered_highlighted">
+  <img class="hidden" src="images/flag.png" alt="flag" data-name="flag">
+  <img class="hidden" src="images/flower.png" alt="flower" data-name="flower">
+  <img class="hidden" src="images/number1.png" alt="number1" data-name="number1">
+  <img class="hidden" src="images/number2.png" alt="number2" data-name="number2">
+  <img class="hidden" src="images/number3.png" alt="number3" data-name="number3">
+  <img class="hidden" src="images/number4.png" alt="number4" data-name="number4">
+  <img class="hidden" src="images/number5.png" alt="number5" data-name="number5">
+  <img class="hidden" src="images/number6.png" alt="number6" data-name="number6">
+  <img class="hidden" src="images/number7.png" alt="number7" data-name="number7">
+  <img class="hidden" src="images/number8.png" alt="number8" data-name="number8">
+  <img class="hidden" src="images/question.png" alt="question" data-name="question">
+  <img class="hidden" src="images/uncovered.png" alt="uncovered" data-name="uncovered">
+</section>
+
+<main>
+<h1>flowers</h1>
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
+<h2>Original Python code</h2>
+
+<pre id="original"><code>
+import pygame
+import math
+import random
+
+cell_size = 18
+
+grid_x_count = 19
+grid_y_count = 14
+
+def reset():
+    global grid
+    global game_over
+    global first_click
+
+    grid = []
+
+    for y in range(grid_y_count):
+        grid.append([])
+        for x in range(grid_x_count):
+            grid[y].append({
+                &#x27;flower&#x27;: False,
+                &#x27;state&#x27;: &#x27;covered&#x27;, # &#x27;covered&#x27;, &#x27;uncovered&#x27;, &#x27;flag&#x27;, &#x27;question&#x27;
+            })
+
+    game_over = False
+    first_click = True
+
+reset()
+
+def get_surrounding_flower_count(x, y):
+    surrounding_flower_count = 0
+
+    for dy in range(-1, 2):
+        for dx in range(-1, 2):
+            if (
+                not (dy == 0 and dx == 0)
+                and 0 &lt;= (y + dy) &lt; len(grid)
+                and 0 &lt;= (x + dx) &lt; len(grid[y + dy])
+                and grid[y + dy][x + dx][&#x27;flower&#x27;]
+            ):
+                surrounding_flower_count += 1
+
+    return surrounding_flower_count
+
+def update():
+    global selected_x
+    global selected_y
+
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    selected_x = math.floor(mouse_x / cell_size)
+    selected_y = math.floor(mouse_y / cell_size)
+
+    if selected_x &gt; grid_x_count - 1:
+        selected_x = grid_x_count - 1
+    if selected_y &gt; grid_y_count - 1:
+        selected_y = grid_y_count - 1
+
+def on_key_down(key):
+    reset()
+
+def on_mouse_up(button):
+    global game_over
+    global first_click
+
+    if not game_over:
+        if button == mouse.LEFT and grid[selected_y][selected_x][&#x27;state&#x27;] != &#x27;flag&#x27;:
+            if first_click:
+                first_click = False
+
+                possible_flower_positions = []
+
+                for y in range(grid_y_count):
+                    for x in range(grid_x_count):
+                        if not (x == selected_x and y == selected_y):
+                            possible_flower_positions.append({&#x27;x&#x27;: x, &#x27;y&#x27;: y})
+
+                for flower_index in range(40):
+                    position = possible_flower_positions.pop(random.randrange(len(possible_flower_positions)))
+                    grid[position[&#x27;y&#x27;]][position[&#x27;x&#x27;]][&#x27;flower&#x27;] = True
+
+            if grid[selected_y][selected_x][&#x27;flower&#x27;]:
+                grid[selected_y][selected_x][&#x27;state&#x27;] = &#x27;uncovered&#x27;
+                game_over = True
+            else:
+                stack = [
+                    {
+                        &#x27;x&#x27;: selected_x,
+                        &#x27;y&#x27;: selected_y,
+                    }
+                ]
+
+                while len(stack) &gt; 0:
+                    current = stack.pop()
+                    x = current[&#x27;x&#x27;]
+                    y = current[&#x27;y&#x27;]
+
+                    grid[y][x][&#x27;state&#x27;] = &#x27;uncovered&#x27;
+
+                    if get_surrounding_flower_count(x, y) == 0:
+                        for dy in range(-1, 2):
+                            for dx in range(-1, 2):
+                                if (
+                                    not (dy == 0 and dx == 0)
+                                    and 0 &lt;= (y + dy) &lt; len(grid)
+                                    and 0 &lt;= (x + dx) &lt; len(grid[y + dy])
+                                    and grid[y + dy][x + dx][&#x27;state&#x27;] in (&#x27;covered&#x27;, &#x27;question&#x27;)
+                                ):
+                                    stack.append({
+                                        &#x27;x&#x27;: x + dx,
+                                        &#x27;y&#x27;: y + dy,
+                                    })
+
+                complete = True
+
+                for y in range(grid_y_count):
+                    for x in range(grid_x_count):
+                        if grid[y][x][&#x27;state&#x27;] != &#x27;uncovered&#x27; and not grid[y][x][&#x27;flower&#x27;]:
+                            complete = False
+
+                if complete:
+                    game_over = True
+
+        elif button == mouse.RIGHT:
+            if grid[selected_y][selected_x][&#x27;state&#x27;] == &#x27;covered&#x27;:
+                grid[selected_y][selected_x][&#x27;state&#x27;] = &#x27;flag&#x27;
+            elif grid[selected_y][selected_x][&#x27;state&#x27;] == &#x27;flag&#x27;:
+                grid[selected_y][selected_x][&#x27;state&#x27;] = &#x27;question&#x27;
+            elif grid[selected_y][selected_x][&#x27;state&#x27;] == &#x27;question&#x27;:
+                grid[selected_y][selected_x][&#x27;state&#x27;] = &#x27;covered&#x27;
+
+    else:
+        reset()
+
+def draw():
+    screen.fill((0, 0, 0))
+
+    for y in range(grid_y_count):
+        for x in range(grid_x_count):
+
+            def draw_cell(image, x, y):
+                screen.blit(image, (x * cell_size, y * cell_size))
+
+            if grid[y][x][&#x27;state&#x27;] == &#x27;uncovered&#x27;:
+                draw_cell(&#x27;uncovered&#x27;, x, y)
+            else:
+                if x == selected_x and y == selected_y and not game_over:
+                    if pygame.mouse.get_pressed()[0] == 1:
+                        if grid[y][x][&#x27;state&#x27;] == &#x27;flag&#x27;:
+                            draw_cell(&#x27;covered&#x27;, x, y)
+                        else:
+                            draw_cell(&#x27;uncovered&#x27;, x, y)
+                    else:
+                        draw_cell(&#x27;covered_highlighted&#x27;, x, y)
+                else:
+                    draw_cell(&#x27;covered&#x27;, x, y)
+
+            surrounding_flower_count = 0
+
+            for dy in range(-1, 2):
+                for dx in range(-1, 2):
+                    if (
+                        not (dy == 0 and dx == 0)
+                        and 0 &lt;= (y + dy) &lt; len(grid)
+                        and 0 &lt;= (x + dx) &lt; len(grid[y + dy])
+                        and grid[y + dy][x + dx][&#x27;flower&#x27;]
+                    ):
+                        surrounding_flower_count += 1
+
+            if grid[y][x][&#x27;flower&#x27;] and game_over:
+                draw_cell(&#x27;flower&#x27;, x, y)
+            elif get_surrounding_flower_count(x, y) &gt; 0 and grid[y][x][&#x27;state&#x27;] == &#x27;uncovered&#x27;:
+                draw_cell(str(get_surrounding_flower_count(x, y)), x, y)
+
+            if grid[y][x][&#x27;state&#x27;] == &#x27;flag&#x27;:
+                draw_cell(&#x27;flag&#x27;, x, y)
+            elif grid[y][x][&#x27;state&#x27;] == &#x27;question&#x27;:
+                draw_cell(&#x27;question&#x27;, x, y)
+
+WIDTH = 18 * 19
+HEIGHT = 18 * 14
+</code></pre>
+</main>
+
+<script>
+const CELL_SIZE = 18;
+
+const GRID_X_COUNT = 19;
+const GRID_Y_COUNT = 14;
+
+WIDTH = CELL_SIZE * GRID_X_COUNT;
+HEIGHT = CELL_SIZE * GRID_Y_COUNT;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+var grid, game_over, first_click, selected_x, selected_y;
+
+function reset() {
+  grid = [];
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    grid.push([]);
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      grid[y].push({
+        'flower': false,
+        'state': 'covered' // 'covered', 'uncovered', 'flag', 'question'
+      });
+    }
+  }
+
+  game_over = false;
+  first_click = true;
+
+  selected_x = 0;
+  selected_y = 0;
+}
+
+function get_surrounding_flower_count(x, y) {
+  let surrounding_flower_count = 0;
+
+  for (let dy = -1; dy < 2; dy++) {
+    for (let dx = -1; dx < 2; dx++) {
+      if (
+        (!((dy === 0) && (dx === 0)))
+        && ((0 <= (y + dy)) && ((y + dy) < grid.length))
+        && ((0 <= (x + dx)) && ((x + dx) < grid[y+dy].length))
+        && grid[y+dy][x+dx]['flower']
+      ) {
+        surrounding_flower_count += 1;
+      }
+    }
+  }
+
+  return surrounding_flower_count;
+}
+
+function on_mouse_move(pos, delta, buttons) {
+  selected_x = Math.floor(pos[0] / CELL_SIZE);
+  selected_y = Math.floor(pos[1] / CELL_SIZE);
+
+  if (selected_x > (GRID_X_COUNT - 1)) {
+    selected_x = GRID_X_COUNT - 1;
+  }
+  if (selected_y > (GRID_Y_COUNT - 1)) {
+    selected_y = GRID_Y_COUNT - 1;
+  }
+}
+
+function on_key_down(key) {
+  reset();
+}
+
+function on_mouse_down(pos, buttons) {
+  selected_x = Math.floor(pos[0] / CELL_SIZE);
+  selected_y = Math.floor(pos[1] / CELL_SIZE);
+
+  if (selected_x > (GRID_X_COUNT - 1)) {
+    selected_x = GRID_X_COUNT - 1;
+  }
+  if (selected_y > (GRID_Y_COUNT - 1)) {
+    selected_y = GRID_Y_COUNT - 1;
+  }
+
+  if (!game_over) {
+    if (((buttons & mouse.LEFT) > 0) && (grid[selected_y][selected_x]['state'] !== 'flag')) {
+      if (first_click) {
+        first_click = false;
+
+        let possible_flower_positions = [],
+            index, position;
+
+        for (let y = 0; y < GRID_Y_COUNT; y++) {
+          for (let x = 0; x < GRID_X_COUNT; x++) {
+            if (!((x === selected_x) && (y === selected_y))) {
+              possible_flower_positions.push({'x': x, 'y': y});
+            }
+          }
+        }
+
+        for (let flower_index = 0; flower_index < 40; flower_index++) {
+          index = getRandomInteger(0, possible_flower_positions.length);
+          position = possible_flower_positions[index];
+          possible_flower_positions.splice(index, 1);
+          grid[position['y']][position['x']]['flower'] = true;
+        }
+      }
+
+      if (grid[selected_y][selected_x]['flower']) {
+        grid[selected_y][selected_x]['state'] = 'uncovered';
+        game_over = true;
+      }
+      else {
+        let stack = [
+          {
+            'x': selected_x,
+            'y': selected_y
+          }
+        ],
+            current, x, y;
+
+        while (stack.length > 0) {
+          current = stack.pop();
+          x = current['x'];
+          y = current['y'];
+
+          grid[y][x]['state'] = 'uncovered';
+
+          if (get_surrounding_flower_count(x, y) === 0) {
+            for (let dy = -1; dy < 2; dy++) {
+              for (let dx = -1; dx < 2; dx++) {
+                if (
+                  (!((dy === 0) && (dx === 0)))
+                  && ((0 <= (y + dy)) && ((y + dy) < grid.length))
+                  && ((0 <= (x + dx)) && ((x + dx) < grid[y+dy].length))
+                  && ((grid[y+dy][x+dx]['state'] === 'covered') || (grid[y+dy][x+dx]['state'] === 'question'))
+                ) {
+                  stack.push({
+                    'x': x + dx,
+                    'y': y + dy
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        complete = true;
+
+        for (let y = 0; y < GRID_Y_COUNT; y++) {
+          for (let x = 0; x < GRID_X_COUNT; x++) {
+            if ((grid[y][x]['state'] !== 'uncovered') && (!grid[y][x]['flower'])) {
+              complete = false;
+            }
+          }
+        }
+
+        if (complete) {
+          game_over = true;
+        }
+      }
+    }
+
+    else if ((buttons & mouse.RIGHT) > 0) {
+      if (grid[selected_y][selected_x]['state'] === 'covered') {
+        grid[selected_y][selected_x]['state'] = 'flag';
+      }
+      else if (grid[selected_y][selected_x]['state'] === 'flag') {
+        grid[selected_y][selected_x]['state'] = 'question';
+      }
+      else if (grid[selected_y][selected_x]['state'] === 'question') {
+        grid[selected_y][selected_x]['state'] = 'covered';
+      }
+    }
+  }
+
+  else {
+    reset();
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      function draw_cell(image, x, y) {
+        screen.blit(image, [x * CELL_SIZE, y * CELL_SIZE]);
+      }
+
+      if (grid[y][x]['state'] === 'uncovered') {
+        draw_cell('uncovered', x, y);
+      }
+      else {
+        if ((x === selected_x) && (y === selected_y) && (!game_over)) {
+          draw_cell('covered_highlighted', x, y);
+        }
+        else {
+          draw_cell('covered', x, y);
+        }
+      }
+
+      let surrounding_flower_count = 0;
+
+      for (let dy = -1; dy < 2; dy++) {
+        for (let dx = -1; dx < 2; dx++) {
+          if (
+            (!((dy === 0) && (dx === 0)))
+            && ((0 <= (y + dy)) && ((y + dy) < grid.length))
+            && ((0 <= (x + dx)) && ((x + dx) < grid[y+dy].length))
+            && grid[y+dy][x+dx]['flower']
+          ) {
+            surrounding_flower_count += 1;
+          }
+        }
+      }
+
+      if (grid[y][x]['flower'] && game_over) {
+        draw_cell('flower', x, y);
+      }
+      else if ((get_surrounding_flower_count(x, y) > 0) && (grid[y][x]['state'] === 'uncovered')) {
+        draw_cell('number' + get_surrounding_flower_count(x, y), x, y);
+      }
+
+      if (grid[y][x]['state'] === 'flag') {
+        draw_cell('flag', x, y);
+      }
+      else if (grid[y][x]['state'] === 'question') {
+        draw_cell('question', x, y);
+      }
+    }
+  }
+}
+
+window.addEventListener('load', (event) => {
+  images.LOAD('#imageLoader img');
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
