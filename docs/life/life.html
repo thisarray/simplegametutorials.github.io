@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>life</title>
+  <script src="../../jsgame0.js"></script>
+  <style type="text/css" media="screen">
+body {
+  background-color: white;
+  color: black;
+}
+.hidden {
+  display: none;
+}
+#original {
+  margin-left: 1em;
+}
+  </style>
+</head>
+
+<body>
+
+<main>
+<h1>life</h1>
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
+<h2>Original Python code</h2>
+
+<pre id="original"><code>
+import pygame
+import math
+
+cell_size = 5
+
+grid_x_count = 70
+grid_y_count = 50
+
+grid = []
+
+for y in range(grid_y_count):
+    grid.append([])
+    for x in range(grid_x_count):
+        grid[y].append(False)
+
+def update():
+    global selected_x
+    global selected_y
+
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    selected_x = min(math.floor(mouse_x / cell_size), grid_x_count - 1)
+    selected_y = min(math.floor(mouse_y / cell_size), grid_y_count - 1)
+
+    if pygame.mouse.get_pressed()[0]:
+        grid[selected_y][selected_x] = True
+    elif pygame.mouse.get_pressed()[2]:
+        grid[selected_y][selected_x] = False
+
+def on_key_down():
+    global grid
+
+    next_grid = []
+
+    for y in range(grid_y_count):
+        next_grid.append([])
+        for x in range(grid_x_count):
+            neighbor_count = 0
+
+            for dy in range(-1, 2):
+                for dx in range(-1, 2):
+                    if (not (dy == 0 and dx == 0)
+                        and (y + dy) &lt; len(grid)
+                        and (x + dx) &lt; len(grid[y + dy])
+                        and grid[y + dy][x + dx]):
+
+                        neighbor_count += 1
+
+            next_grid[y].append(
+                neighbor_count == 3 or
+                (grid[y][x] and neighbor_count == 2)
+            )
+
+    grid = next_grid
+
+def draw():
+    screen.fill((255, 255, 255))
+
+    for y in range(grid_y_count):
+        for x in range(grid_x_count):
+            cell_draw_size = cell_size - 1
+
+            if x == selected_x and y == selected_y:
+                color = (0, 255, 255)
+            elif grid[y][x]:
+                color = (255, 0, 255)
+            else:
+                color = (220, 220, 220)
+
+            screen.draw.filled_rect(
+                Rect(
+                    (x * cell_size, y * cell_size),
+                    (cell_draw_size, cell_draw_size)
+                ),
+                color=color
+            )
+
+WIDTH = 5 * 70
+HEIGHT = 5 * 50
+</code></pre>
+</main>
+
+<script>
+const CELL_SIZE = 5;
+
+const GRID_X_COUNT = 70;
+const GRID_Y_COUNT = 50;
+
+WIDTH = CELL_SIZE * GRID_X_COUNT;
+HEIGHT = CELL_SIZE * GRID_Y_COUNT;
+
+var grid, selected_x, selected_y;
+
+function reset() {
+  grid = [];
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    grid.push([]);
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      grid[y].push(false);
+    }
+  }
+
+  selected_x = 0;
+  selected_y = 0;
+}
+
+function on_mouse_move(pos, delta, buttons) {
+  selected_x = Math.min(Math.floor(pos[0] / CELL_SIZE), GRID_X_COUNT - 1);
+  selected_y = Math.min(Math.floor(pos[1] / CELL_SIZE), GRID_Y_COUNT - 1);
+}
+
+function on_mouse_down(pos, buttons) {
+  selected_x = Math.min(Math.floor(pos[0] / CELL_SIZE), GRID_X_COUNT - 1);
+  selected_y = Math.min(Math.floor(pos[1] / CELL_SIZE), GRID_Y_COUNT - 1);
+
+  if ((buttons & mouse.LEFT) > 0) {
+    grid[selected_y][selected_x] = true;
+  }
+  else if ((buttons & mouse.RIGHT) > 0) {
+    grid[selected_y][selected_x] = false;
+  }
+}
+
+function on_key_down() {
+  let next_grid = [],
+      neighbor_count;
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    next_grid.push([]);
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      neighbor_count = 0;
+
+      for (let dy = -1; dy < 2; dy++) {
+        for (let dx = -1; dx < 2; dx++) {
+          if ((!((dy === 0) && (dx === 0)))
+            && (0 <= (y + dy))
+            && ((y + dy) < grid.length)
+            && (0 <= (x + dx))
+            && ((x + dx) < grid[y+dy].length)
+            && grid[y+dy][x+dx]) {
+            neighbor_count += 1;
+          }
+        }
+      }
+
+      next_grid[y].push(
+        (neighbor_count === 3) ||
+        (grid[y][x] && (neighbor_count === 2))
+      );
+    }
+  }
+
+  grid = next_grid;
+}
+
+function draw() {
+  screen.fill([255, 255, 255]);
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      let cell_draw_size = CELL_SIZE - 1,
+          color;
+
+      if ((x === selected_x) && (y === selected_y)) {
+        color = [0, 255, 255];
+      }
+      else if (grid[y][x]) {
+        color = [255, 0, 255];
+      }
+      else {
+        color = [220, 220, 220];
+      }
+
+      screen.draw.filled_rect(
+        new Rect(
+          [x * CELL_SIZE, y * CELL_SIZE],
+          [cell_draw_size, cell_draw_size]
+        ),
+        color
+      );
+    }
+  }
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
