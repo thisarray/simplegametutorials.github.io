@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>repeat</title>
+  <script src="../../jsgame0.js"></script>
+  <style type="text/css" media="screen">
+body {
+  background-color: white;
+  color: black;
+}
+.hidden {
+  display: none;
+}
+#original {
+  margin-left: 1em;
+}
+  </style>
+</head>
+
+<body>
+
+<main>
+<h1>repeat</h1>
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
+<h2>Original Python code</h2>
+
+<pre id="original"><code>
+import random
+
+def add_to_sequence():
+    sequence.append(random.randint(1, 4))
+
+def reset():
+    global sequence
+    global current
+    global timer
+    global state
+    global flashing
+
+    sequence = []
+    add_to_sequence()
+    current = 0
+    timer = 0
+    state = &#x27;watch&#x27; # &#x27;watch&#x27;, &#x27;repeat&#x27;, &#x27;gameover&#x27;
+    flashing = False
+
+reset()
+
+def update(dt):
+    global timer
+    global current
+    global state
+    global flashing
+
+    if state == &#x27;watch&#x27;:
+        timer += dt
+        if timer &gt;= 0.5:
+            timer = 0
+            flashing = not flashing
+            if not flashing:
+                current += 1
+                if current == len(sequence):
+                    state = &#x27;repeat&#x27;
+                    current = 0
+
+def on_key_down(key):
+    global current
+    global state
+
+    if state == &#x27;repeat&#x27;:
+        if key in (keys.K_1, keys.K_2, keys.K_3, keys.K_4):
+            if key == keys.K_1:
+                number = 1
+            elif key == keys.K_2:
+                number = 2
+            elif key == keys.K_3:
+                number = 3
+            elif key == keys.K_4:
+                number = 4
+
+            if number == sequence[current]:
+                current += 1
+                if current == len(sequence):
+                    current = 0
+                    add_to_sequence()
+                    state = &#x27;watch&#x27;
+            else:
+                state = &#x27;gameover&#x27;
+    elif state == &#x27;gameover&#x27;:
+        reset()
+
+def draw():
+    screen.fill((0, 0, 0))
+
+    def draw_square(number, color, color_flashing):
+
+        if state == &#x27;watch&#x27; and flashing and number == sequence[current]:
+            square_color = color_flashing
+        else:
+            square_color = color
+
+        square_size = 50
+        screen.draw.filled_rect(
+            Rect(square_size * (number - 1), 0, square_size, square_size),
+            color=square_color
+        )
+        screen.draw.text(str(number), (square_size * (number - 1) + 21, 18))
+
+    draw_square(1, (50, 0, 0), (255, 0, 0))
+    draw_square(2, (0, 50, 0), (0, 255, 0))
+    draw_square(3, (0, 0, 50), (0, 0, 255))
+    draw_square(4, (50, 50, 0), (255, 255, 0))
+
+    if state == &#x27;repeat&#x27;:
+        screen.draw.text(str(current + 1) + &#x27;/&#x27; + str(len(sequence)), (20, 60))
+    elif state == &#x27;gameover&#x27;:
+        screen.draw.text(&#x27;Game over!&#x27;, (20, 60))
+
+WIDTH = 530
+HEIGHT = 400
+</code></pre>
+</main>
+
+<script>
+WIDTH = 530;
+HEIGHT = 400;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+function add_to_sequence() {
+  sequence.push(getRandomInteger(1, 5));
+}
+
+var sequence, current, timer, state, flashing;
+
+function reset() {
+  sequence = [];
+  add_to_sequence();
+  current = 0;
+  timer = 0;
+  state = 'watch'; // 'watch', 'repeat', 'gameover'
+  flashing = false;
+}
+
+function update(dt) {
+  if (state === 'watch') {
+    timer += dt;
+    if (timer >= 0.5) {
+      timer = 0;
+      flashing = !flashing;
+      if (!flashing) {
+        current += 1;
+        if (current === sequence.length) {
+          state = 'repeat';
+          current = 0;
+        }
+      }
+    }
+  }
+}
+
+function on_key_down(key) {
+  if (state === 'repeat') {
+    if ((key === keys.K_1) || (key === keys.K_2) || (key === keys.K_3) || (key === keys.K_4)) {
+      let number = 0;
+      if (key === keys.K_1) {
+        number = 1;
+      }
+      else if (key === keys.K_2) {
+        number = 2;
+      }
+      else if (key === keys.K_3) {
+        number = 3;
+      }
+      else if (key === keys.K_4) {
+        number = 4;
+      }
+
+      if (number === sequence[current]) {
+        current += 1;
+        if (current === sequence.length) {
+          current = 0;
+          add_to_sequence();
+          state = 'watch';
+        }
+      }
+      else {
+        state = 'gameover';
+      }
+    }
+  }
+  else if (state === 'gameover') {
+    reset();
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  function draw_square(number, color, color_flashing) {
+    let square_size = 50,
+        square_color;
+    if ((state === 'watch') && flashing && (number === sequence[current])) {
+      square_color = color_flashing;
+    }
+    else {
+      square_color = color;
+    }
+
+    screen.draw.filled_rect(
+      new Rect(square_size * (number - 1), 0, square_size, square_size),
+      square_color
+    );
+    screen.draw.text(number.toFixed(), {
+      pos: [(square_size * (number - 1)) + 21, 18]
+    });
+  }
+
+  draw_square(1, [50, 0, 0], [255, 0, 0]);
+  draw_square(2, [0, 50, 0], [0, 255, 0]);
+  draw_square(3, [0, 0, 50], [0, 0, 255]);
+  draw_square(4, [50, 50, 0], [255, 255, 0]);
+
+  if (state === 'repeat') {
+    screen.draw.text((current + 1) + '/' + sequence.length, {
+      pos: [20, 60]
+    });
+  }
+  else if (state === 'gameover') {
+    screen.draw.text('Game over!', {
+      pos: [20, 60]
+    });
+  }
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
