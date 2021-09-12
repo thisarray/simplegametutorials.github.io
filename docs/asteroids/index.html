@@ -1,5 +1,6 @@
 <html><head><title>Asteroids Tutorial for Python and Pygame Zero 1.2</title>
 <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700" rel="stylesheet">
+<script src="../../jsgame0.js"></script>
 <style>
 body {
     font-family: Calibri, sans-serif;
@@ -124,7 +125,15 @@ h2 + h3 {
 <body>
 <div class="container">
 <p><a href="../../">Home page</a> > <a href="../">Pygame Zero tutorials</a></p><h1>Asteroids</h1><p class="subheading">A tutorial for Python and Pygame Zero 1.2</p><p>Please send any feedback to <a href="mailto:simple.game.tutorials@gmail.com">simple.game.tutorials@gmail.com</a></p><p><a href="asteroids.py" class='download'>Download asteroids.py</a></p>
-<img src="1.png">
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
 <h2>Rules</h2>
 <p>Move the ship to avoid asteroids, and destroy them with bullets.</p>
 <p>Bigger asteroids break into two smaller and faster asteroids when hit with a bullet, and the smallest asteroids are destroyed completely.</p>
@@ -763,4 +772,236 @@ def <span class="name">update</span>(<span class="name">dt</span>):
     if <span class="call">len</span>(<span class="name">asteroids</span>) == <span class="literal">0</span>:
         <span class="call">reset</span>()
 </pre></div>
-</div></body></html>
+</div>
+
+<script>
+/*
+ * Return the result of the modulo operation dividend modulo divisor.
+ *
+ * The remainder operator (%) in JavaScript always takes the sign of the dividend.
+ * This trips you up when you come from Python and expect it to be a
+ * modulo operator for a negative dividend.
+ * This function correctly returns the non-negative remainder like Python.
+ */
+function modulo(dividend, divisor) {
+  return (((dividend % divisor) + divisor) % divisor);
+}
+
+WIDTH = 800;
+HEIGHT = 600;
+
+const SHIP_RADIUS = 30;
+
+const BULLET_TIMER_LIMIT = 0.5;
+const BULLET_RADIUS = 5;
+
+const ASTEROID_STAGES = [
+  {
+    'speed': 120,
+    'radius': 15
+  },
+  {
+    'speed': 70,
+    'radius': 30
+  },
+  {
+    'speed': 50,
+    'radius': 50
+  },
+  {
+    'speed': 20,
+    'radius': 80
+  }
+];
+
+var ship_x, ship_y, ship_speed_x, ship_speed_y, ship_angle, bullet_timer, bullets, asteroids;
+
+function reset() {
+  ship_x = WIDTH / 2;
+  ship_y = HEIGHT / 2;
+  ship_speed_x = 0;
+  ship_speed_y = 0;
+  ship_angle = 0;
+
+  bullets = [];
+  bullet_timer = BULLET_TIMER_LIMIT;
+
+  asteroids = [
+    {
+      'x': 100,
+      'y': 100
+    },
+    {
+      'x': WIDTH - 100,
+      'y': 100
+    },
+    {
+      'x': WIDTH / 2,
+      'y': HEIGHT - 100
+    }
+  ];
+
+  for (let asteroid of asteroids) {
+    asteroid['angle'] = Math.random() * (2 * Math.PI);
+    asteroid['stage'] = ASTEROID_STAGES.length - 1;
+  }
+}
+
+function update(dt) {
+  let turn_speed = 10,
+      ship_speed = 100;
+
+  if (keyboard[keys.RIGHT]) {
+    ship_angle += turn_speed * dt;
+  }
+
+  if (keyboard[keys.LEFT]) {
+    ship_angle -= turn_speed * dt;
+  }
+
+  ship_angle = modulo(ship_angle, 2 * Math.PI);
+
+  if (keyboard[keys.UP]) {
+    ship_speed_x += Math.cos(ship_angle) * ship_speed * dt;
+    ship_speed_y += Math.sin(ship_angle) * ship_speed * dt;
+  }
+
+  ship_x += ship_speed_x * dt;
+  ship_y += ship_speed_y * dt;
+
+  ship_x = modulo(ship_x, WIDTH);
+  ship_y = modulo(ship_y, HEIGHT);
+
+  function are_circles_intersecting(a_x, a_y, a_radius, b_x, b_y, b_radius) {
+    return ((((a_x - b_x) * (a_x - b_x)) + ((a_y - b_y) * (a_y - b_y))) <= ((a_radius + b_radius) * (a_radius + b_radius)));
+  }
+
+  for (let i = (bullets.length - 1); i > -1; i--) {
+    bullets[i]['time_left'] -= dt;
+
+    if (bullets[i]['time_left'] <= 0) {
+      bullets.splice(i, 1);
+      continue;
+    }
+
+    let bullet_speed = 500;
+    bullets[i]['x'] += Math.cos(bullets[i]['angle']) * bullet_speed * dt;
+    bullets[i]['y'] += Math.sin(bullets[i]['angle']) * bullet_speed * dt;
+    bullets[i]['x'] = modulo(bullets[i]['x'], WIDTH);
+    bullets[i]['y'] = modulo(bullets[i]['y'], HEIGHT);
+
+    for (let j = (asteroids.length - 1); j > -1; j--) {
+      if (are_circles_intersecting(
+        bullets[i]['x'], bullets[i]['y'], BULLET_RADIUS,
+        asteroids[j]['x'], asteroids[j]['y'],
+        ASTEROID_STAGES[asteroids[j]['stage']]['radius']
+      )) {
+        bullets.splice(i, 1);
+
+        if (asteroids[j]['stage'] > 0) {
+          let angle1 = Math.random() * (2 * Math.PI),
+              angle2 = modulo(angle1 - Math.PI, 2 * Math.PI);
+
+          asteroids.push({
+            'x': asteroids[j]['x'],
+            'y': asteroids[j]['y'],
+            'angle': angle1,
+            'stage': asteroids[j]['stage'] - 1
+          });
+          asteroids.push({
+            'x': asteroids[j]['x'],
+            'y': asteroids[j]['y'],
+            'angle': angle2,
+            'stage': asteroids[j]['stage'] - 1
+          });
+        }
+
+        asteroids.splice(j, 1);
+        break;
+      }
+    }
+  }
+
+  bullet_timer += dt;
+
+  if (keyboard[keys.S]) {
+    if (bullet_timer >= BULLET_TIMER_LIMIT) {
+      bullet_timer = 0;
+
+      bullets.push({
+        'x': ship_x + (Math.cos(ship_angle) * SHIP_RADIUS),
+        'y': ship_y + (Math.sin(ship_angle) * SHIP_RADIUS),
+        'angle': ship_angle,
+        'time_left': 4
+      });
+    }
+  }
+
+  for (let asteroid of asteroids) {
+    let asteroid_speed = ASTEROID_STAGES[asteroid['stage']]['speed'];
+    asteroid['x'] += Math.cos(asteroid['angle']) * asteroid_speed * dt;
+    asteroid['y'] += Math.sin(asteroid['angle']) * asteroid_speed * dt;
+    asteroid['x'] = modulo(asteroid['x'], WIDTH);
+    asteroid['y'] = modulo(asteroid['y'], HEIGHT);
+
+    if (are_circles_intersecting(
+      ship_x, ship_y, SHIP_RADIUS,
+      asteroid['x'], asteroid['y'],
+      ASTEROID_STAGES[asteroid['stage']]['radius']
+    )) {
+      reset();
+      break;
+    }
+  }
+
+  if (asteroids.length === 0) {
+    reset();
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  for (let y = -1; y < 2; y++) {
+    for (let x = -1; x < 2; x++) {
+      let offset_x = x * WIDTH,
+          offset_y = y * HEIGHT,
+          ship_circle_distance = 20;
+
+      screen.draw.filled_circle(
+        [ship_x + offset_x, ship_y + offset_y],
+        SHIP_RADIUS, [0, 0, 255]
+      );
+
+      screen.draw.filled_circle([
+        ship_x + offset_x + (Math.cos(ship_angle) * ship_circle_distance),
+        ship_y + offset_y + (Math.sin(ship_angle) * ship_circle_distance)],
+        5, [0, 255, 255]
+      );
+
+      for (let bullet of bullets) {
+        screen.draw.filled_circle(
+          [bullet['x'] + offset_x, bullet['y'] + offset_y],
+          BULLET_RADIUS, [0, 255, 0]
+        );
+      }
+
+      for (let asteroid of asteroids) {
+        screen.draw.filled_circle([
+          asteroid['x'] + offset_x, asteroid['y'] + offset_y],
+          ASTEROID_STAGES[asteroid['stage']]['radius'],
+          [255, 255, 0]
+        );
+      }
+    }
+  }
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
