@@ -1,5 +1,6 @@
 <html><head><title>Bird Tutorial for Python and Pygame Zero 1.2</title>
 <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700" rel="stylesheet">
+<script src="../../jsgame0.js"></script>
 <style>
 body {
     font-family: Calibri, sans-serif;
@@ -124,7 +125,15 @@ h2 + h3 {
 <body>
 <div class="container">
 <p><a href="../../">Home page</a> > <a href="../">Pygame Zero tutorials</a></p><h1>Bird</h1><p class="subheading">A tutorial for Python and Pygame Zero 1.2</p><p>Please send any feedback to <a href="mailto:simple.game.tutorials@gmail.com">simple.game.tutorials@gmail.com</a></p><p><a href="bird.py" class="download">Download bird.py</a></p>
-<img src="1.png">
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
 <h2>Rules</h2>
 <p>Fly through the spaces between the pipes by flapping.</p>
 <p>A point is scored for every pipe passed.</p>
@@ -833,4 +842,166 @@ def <span class="name">update</span>(<span class="name">dt</span>):
     <span class="highlight"><span class="call">update_score_and_closest_pipe</span>(<span class="literal">1</span>, <span class="name">pipe_1_x</span>, <span class="literal">2</span>)</span>
     <span class="highlight"><span class="call">update_score_and_closest_pipe</span>(<span class="literal">2</span>, <span class="name">pipe_2_x</span>, <span class="literal">1</span>)</span>
 </pre></div>
-</div></body></html>
+</div>
+
+<script>
+WIDTH = 300;
+HEIGHT = 388;
+
+const BIRD_X = 62;
+const BIRD_WIDTH = 30;
+const BIRD_HEIGHT = 25;
+
+const PIPE_SPACE_HEIGHT = 100;
+const PIPE_WIDTH = 54;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+function new_pipe_space_y() {
+  let pipe_space_y_min = 54;
+  return getRandomInteger(
+    pipe_space_y_min,
+    HEIGHT - PIPE_SPACE_HEIGHT - pipe_space_y_min + 1
+  );
+}
+
+var bird_y, bird_y_speed, pipe_1_x, pipe_1_space_y, pipe_2_x, pipe_2_space_y, score, upcoming_pipe;
+
+function reset() {
+  bird_y = 200;
+  bird_y_speed = 0;
+
+  pipe_1_x = WIDTH;
+  pipe_1_space_y = new_pipe_space_y();
+
+  pipe_2_x = WIDTH + ((WIDTH + PIPE_WIDTH) / 2);
+  pipe_2_space_y = new_pipe_space_y();
+
+  score = 0;
+
+  upcoming_pipe = 1;
+}
+
+function update(dt) {
+  bird_y_speed += 516 * dt;
+  bird_y += bird_y_speed * dt;
+
+  function move_pipe(pipe_x, pipe_space_y) {
+    pipe_x -= 60 * dt;
+
+    if ((pipe_x + PIPE_WIDTH) < 0) {
+      pipe_x = WIDTH;
+      pipe_space_y = new_pipe_space_y();
+    }
+
+    return [pipe_x, pipe_space_y];
+  }
+
+  [pipe_1_x, pipe_1_space_y] = move_pipe(pipe_1_x, pipe_1_space_y);
+  [pipe_2_x, pipe_2_space_y] = move_pipe(pipe_2_x, pipe_2_space_y);
+
+  function is_bird_colliding_with_pipe(pipe_x, pipe_space_y) {
+    return (
+      // Left edge of bird is to the left of the right edge of pipe
+      (BIRD_X < (pipe_x + PIPE_WIDTH))
+      &&
+      // Right edge of bird is to the right of the left edge of pipe
+      ((BIRD_X + BIRD_WIDTH) > pipe_x)
+      && (
+        // Top edge of bird is above the bottom edge of first pipe segment
+        (bird_y < pipe_space_y)
+        ||
+        // Bottom edge of bird is below the top edge of second pipe segment
+        ((bird_y + BIRD_HEIGHT) > (pipe_space_y + PIPE_SPACE_HEIGHT))
+      )
+    );
+  }
+
+  if (
+    is_bird_colliding_with_pipe(pipe_1_x, pipe_1_space_y)
+    || is_bird_colliding_with_pipe(pipe_2_x, pipe_2_space_y)
+    || (bird_y > HEIGHT)
+  ) {
+    reset();
+  }
+
+  function update_score_and_closest_pipe(this_pipe, pipe_x, other_pipe) {
+    if (
+      (upcoming_pipe === this_pipe)
+      && (BIRD_X > (pipe_x + PIPE_WIDTH))
+    ) {
+      score += 1;
+      upcoming_pipe = other_pipe;
+    }
+  }
+
+  update_score_and_closest_pipe(1, pipe_1_x, 2);
+  update_score_and_closest_pipe(2, pipe_2_x, 1);
+}
+
+function on_key_down() {
+  if (bird_y > 0) {
+    bird_y_speed = -165;
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  screen.draw.filled_rect(
+    new Rect(
+      [0, 0],
+      [WIDTH, HEIGHT]
+    ),
+    [35, 92, 118]
+  );
+
+  screen.draw.filled_rect(
+    new Rect(
+      [BIRD_X, bird_y],
+      [BIRD_WIDTH, BIRD_HEIGHT]
+    ),
+    [224, 214, 68]
+  );
+
+  function draw_pipe(pipe_x, pipe_space_y) {
+    screen.draw.filled_rect(
+      new Rect(
+        [pipe_x, 0],
+        [PIPE_WIDTH, pipe_space_y]
+      ),
+      [94, 201, 72]
+    );
+
+    screen.draw.filled_rect(
+      new Rect(
+        [pipe_x, pipe_space_y + PIPE_SPACE_HEIGHT],
+        [PIPE_WIDTH, HEIGHT - pipe_space_y - PIPE_SPACE_HEIGHT]
+      ),
+      [94, 201, 72]
+    );
+  }
+
+  draw_pipe(pipe_1_x, pipe_1_space_y);
+  draw_pipe(pipe_2_x, pipe_2_space_y);
+
+  screen.draw.text(score.toFixed(), {
+    pos: [15, 15]
+  });
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
