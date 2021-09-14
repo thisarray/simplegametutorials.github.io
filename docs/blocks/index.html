@@ -1,5 +1,6 @@
 <html><head><title>Blocks Tutorial for Python and Pygame Zero 1.2</title>
 <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700" rel="stylesheet">
+<script src="../../jsgame0.js"></script>
 <style>
 body {
     font-family: Calibri, sans-serif;
@@ -124,7 +125,15 @@ h2 + h3 {
 <body>
 <div class="container">
 <p><a href="../../">Home page</a> > <a href="../">Pygame Zero tutorials</a></p><h1>Blocks</h1><p class="subheading">A tutorial for Python and Pygame Zero 1.2</p><p>Please send any feedback to <a href="mailto:simple.game.tutorials@gmail.com">simple.game.tutorials@gmail.com</a></p><p><a href="blocks.py" class="download">Download blocks.py</a></p>
-<img src="1.png">
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
 <h2>Rules</h2>
 <p>There are seven types of pieces. Each piece contains four blocks.</p>
 <img src="2.png">
@@ -1050,4 +1059,397 @@ def <span class="name">update</span>(<span class="name">dt</span>):
                 <span class="call">draw_block</span>(<span class="literal">'preview'</span>, <span class="name">x</span> + <span class="literal">5</span>, <span class="name">y</span> + <span class="literal">1</span>)
 </pre></div>
 <img src="16.png">
-</div></body></html>
+</div>
+
+<script>
+WIDTH = 280;
+HEIGHT = 500;
+
+const PIECE_STRUCTURES = [
+  [
+    [
+      [' ', ' ', ' ', ' '],
+      ['i', 'i', 'i', 'i'],
+      [' ', ' ', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', 'i', ' ', ' '],
+      [' ', 'i', ' ', ' '],
+      [' ', 'i', ' ', ' '],
+      [' ', 'i', ' ', ' ']
+    ]
+  ],
+  [
+    [
+      [' ', ' ', ' ', ' '],
+      [' ', 'o', 'o', ' '],
+      [' ', 'o', 'o', ' '],
+      [' ', ' ', ' ', ' ']
+    ]
+  ],
+  [
+    [
+      [' ', ' ', ' ', ' '],
+      ['j', 'j', 'j', ' '],
+      [' ', ' ', 'j', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', 'j', ' ', ' '],
+      [' ', 'j', ' ', ' '],
+      ['j', 'j', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      ['j', ' ', ' ', ' '],
+      ['j', 'j', 'j', ' '],
+      [' ', ' ', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', 'j', 'j', ' '],
+      [' ', 'j', ' ', ' '],
+      [' ', 'j', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ]
+  ],
+  [
+    [
+      [' ', ' ', ' ', ' '],
+      ['l', 'l', 'l', ' '],
+      ['l', ' ', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', 'l', ' ', ' '],
+      [' ', 'l', ' ', ' '],
+      [' ', 'l', 'l', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', ' ', 'l', ' '],
+      ['l', 'l', 'l', ' '],
+      [' ', ' ', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      ['l', 'l', ' ', ' '],
+      [' ', 'l', ' ', ' '],
+      [' ', 'l', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ]
+  ],
+  [
+    [
+      [' ', ' ', ' ', ' '],
+      ['t', 't', 't', ' '],
+      [' ', 't', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', 't', ' ', ' '],
+      [' ', 't', 't', ' '],
+      [' ', 't', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', 't', ' ', ' '],
+      ['t', 't', 't', ' '],
+      [' ', ' ', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', 't', ' ', ' '],
+      ['t', 't', ' ', ' '],
+      [' ', 't', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ]
+  ],
+  [
+    [
+      [' ', ' ', ' ', ' '],
+      [' ', 's', 's', ' '],
+      ['s', 's', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      ['s', ' ', ' ', ' '],
+      ['s', 's', ' ', ' '],
+      [' ', 's', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ]
+  ],
+  [
+    [
+      [' ', ' ', ' ', ' '],
+      ['z', 'z', ' ', ' '],
+      [' ', 'z', 'z', ' '],
+      [' ', ' ', ' ', ' ']
+    ],
+    [
+      [' ', 'z', ' ', ' '],
+      ['z', 'z', ' ', ' '],
+      ['z', ' ', ' ', ' '],
+      [' ', ' ', ' ', ' ']
+    ]
+  ]
+];
+
+const PIECE_X_COUNT = 4;
+const PIECE_Y_COUNT = 4;
+
+const GRID_X_COUNT = 10;
+const GRID_Y_COUNT = 18;
+
+const TIMER_LIMIT = 0.5;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+/*
+ * Shuffle Array x in place.
+ */
+function shuffle(x) {
+  let j, temp;
+  for (let i = x.length - 1; i > 0; i--) {
+    // pick an element in x[:i+1] with which to exchange x[i]
+    j = getRandomInteger(0, i + 1);
+    temp = x[i];
+    x[i] = x[j];
+    x[j] = temp;
+  }
+}
+
+function new_sequence() {
+  sequence = [];
+  for (let i = 0; i < PIECE_STRUCTURES.length; i++) {
+    sequence.push(i);
+  }
+  shuffle(sequence);
+}
+
+function new_piece() {
+  piece_x = 3;
+  piece_y = 0;
+  piece_type = sequence.pop();
+  if (sequence.length === 0) {
+    new_sequence();
+  }
+  piece_rotation = 0;
+}
+
+var sequence, piece_x, piece_y, piece_type, piece_rotation, inert, timer;
+
+function reset() {
+  inert = [];
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    inert.push([]);
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      inert[y].push(' ');
+    }
+  }
+
+  timer = 0;
+  new_sequence();
+  new_piece();
+}
+
+function can_piece_move(test_x, test_y, test_rotation) {
+  for (let y = 0; y < PIECE_Y_COUNT; y++) {
+    for (let x = 0; x < PIECE_X_COUNT; x++) {
+      let test_block_x = test_x + x,
+          test_block_y = test_y + y;
+
+      if (
+        (PIECE_STRUCTURES[piece_type][test_rotation][y][x] !== ' ') && (
+          (test_block_x < 0)
+          || (test_block_x >= GRID_X_COUNT)
+          || (test_block_y >= GRID_Y_COUNT)
+          || (inert[test_block_y][test_block_x] !== ' ')
+        )
+      ) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function update(dt) {
+  timer += dt;
+  if (timer >= TIMER_LIMIT) {
+    timer = 0;
+
+    let test_y = piece_y + 1;
+    if (can_piece_move(piece_x, test_y, piece_rotation)) {
+      piece_y = test_y;
+    }
+    else {
+      // Add piece to inert
+      for (let y = 0; y < PIECE_Y_COUNT; y++) {
+        for (let x = 0; x < PIECE_X_COUNT; x++) {
+          let block = PIECE_STRUCTURES[piece_type][piece_rotation][y][x];
+          if (block !== ' ') {
+            inert[piece_y+y][piece_x+x] = block;
+          }
+        }
+      }
+
+      // Find complete rows
+      for (let y = 0; y < GRID_Y_COUNT; y++) {
+        let complete = true;
+        for (let x = 0; x < GRID_X_COUNT; x++) {
+          if (inert[y][x] === ' ') {
+            complete = false;
+            break;
+          }
+        }
+
+        if (complete) {
+          for (let ry = y; ry > 1; ry--) {
+            for (let rx = 0; rx < GRID_X_COUNT; rx++) {
+              inert[ry][rx] = inert[ry-1][rx];
+            }
+          }
+
+          for (let rx = 0; rx < GRID_X_COUNT; rx++) {
+            inert[0][rx] = ' ';
+          }
+        }
+      }
+
+      new_piece();
+
+      if (!can_piece_move(piece_x, piece_y, piece_rotation)) {
+        reset();
+      }
+    }
+  }
+}
+
+function on_key_down(key) {
+  let test_rotation, test_x;
+
+  if (key === keys.X) {
+    test_rotation = piece_rotation + 1;
+    if (test_rotation > (PIECE_STRUCTURES[piece_type].length - 1)) {
+      test_rotation = 0;
+    }
+
+    if (can_piece_move(piece_x, piece_y, test_rotation)) {
+      piece_rotation = test_rotation;
+    }
+  }
+
+  else if (key === keys.Z) {
+    test_rotation = piece_rotation - 1;
+    if (test_rotation < 0) {
+      test_rotation = PIECE_STRUCTURES[piece_type].length - 1;
+    }
+
+    if (can_piece_move(piece_x, piece_y, test_rotation)) {
+      piece_rotation = test_rotation;
+    }
+  }
+
+  else if (key === keys.LEFT) {
+    test_x = piece_x - 1;
+
+    if (can_piece_move(test_x, piece_y, piece_rotation)) {
+      piece_x = test_x;
+    }
+  }
+
+  else if (key === keys.RIGHT) {
+    test_x = piece_x + 1;
+
+    if (can_piece_move(test_x, piece_y, piece_rotation)) {
+      piece_x = test_x;
+    }
+  }
+
+  else if (key === keys.C) {
+    while (can_piece_move(piece_x, piece_y + 1, piece_rotation)) {
+      piece_y += 1;
+      timer = TIMER_LIMIT;
+    }
+  }
+}
+
+function draw() {
+  screen.fill([255, 255, 255]);
+
+  function draw_block(block, x, y) {
+    let colors = new Map([
+      [' ', [222, 222, 222]],
+      ['i', [120, 195, 239]],
+      ['j', [236, 231, 108]],
+      ['l', [124, 218, 193]],
+      ['o', [234, 177, 121]],
+      ['s', [211, 136, 236]],
+      ['t', [248, 147, 196]],
+      ['z', [169, 221, 118]],
+      ['preview', [190, 190, 190]]
+    ]),
+        color = colors.get(block),
+
+        block_size = 20,
+        block_draw_size = block_size - 1;
+    screen.draw.filled_rect(
+      new Rect(
+        x * block_size, y * block_size,
+        block_draw_size, block_draw_size
+      ),
+      color
+    );
+  }
+
+  let offset_x = 2,
+      offset_y = 5,
+      block;
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      draw_block(inert[y][x], x + offset_x, y + offset_y);
+    }
+  }
+
+  for (let y = 0; y < PIECE_Y_COUNT; y++) {
+    for (let x = 0; x < PIECE_X_COUNT; x++) {
+      block = PIECE_STRUCTURES[piece_type][piece_rotation][y][x];
+      if (block !== ' ') {
+        draw_block(
+          block,
+          x + piece_x + offset_x,
+          y + piece_y + offset_y
+        );
+      }
+    }
+  }
+
+  for (let y = 0; y < PIECE_Y_COUNT; y++) {
+    for (let x = 0; x < PIECE_X_COUNT; x++) {
+      block = PIECE_STRUCTURES[sequence[sequence.length-1]][0][y][x];
+      if (block !== ' ') {
+        draw_block('preview', x + 5, y + 1);
+      }
+    }
+  }
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
