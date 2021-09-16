@@ -1,5 +1,6 @@
 <html><head><title>Eyes Tutorial for Python and Pygame Zero 1.2</title>
 <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700" rel="stylesheet">
+<script src="../../jsgame0.js"></script>
 <style>
 body {
     font-family: Calibri, sans-serif;
@@ -124,7 +125,15 @@ h2 + h3 {
 <body>
 <div class="container">
 <p><a href="../../">Home page</a> > <a href="../">Pygame Zero tutorials</a></p><h1>Eyes</h1><p class="subheading">A tutorial for Python and Pygame Zero 1.2</p><p>Please send any feedback to <a href="mailto:simple.game.tutorials@gmail.com">simple.game.tutorials@gmail.com</a></p><p><a href="eyes.py" class="download">Download eyes.py</a></p>
-<img src="1.png">
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
 <p>The eyes follow the cursor.</p>
 <h3>Drawing an eye</h3>
 <p>The eye is drawn with a white circle and a smaller dark blue circle for the pupil.</p>
@@ -266,4 +275,48 @@ def <span class="name">draw</span>():
     <span class="highlight"><span class="call">draw_eye</span>(<span class="literal">330</span>, <span class="literal">200</span>)</span>
 </pre></div>
 <img src="8.png">
-</div></body></html>
+</div>
+
+<script>
+WIDTH = 530;
+HEIGHT = 400;
+
+var mouse_x, mouse_y;
+
+function reset() {
+  mouse_x = 0;
+  mouse_y = 0;
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  function draw_eye(eye_x, eye_y) {
+    let distance_x = mouse_x - eye_x,
+        distance_y = mouse_y - eye_y,
+        distance = Math.min(Math.sqrt((distance_x * distance_x) + (distance_y * distance_y)), 30),
+        angle = Math.atan2(distance_y, distance_x),
+
+        pupil_x = eye_x + (Math.cos(angle) * distance),
+        pupil_y = eye_y + (Math.sin(angle) * distance);
+
+    screen.draw.filled_circle([eye_x, eye_y], 50, [255, 255, 255]);
+    screen.draw.filled_circle([pupil_x, pupil_y], 15, [0, 0, 100]);
+  }
+
+  draw_eye(200, 200);
+  draw_eye(330, 200);
+}
+
+function on_mouse_move(pos, delta, buttons) {
+  [mouse_x, mouse_y] = pos;
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
