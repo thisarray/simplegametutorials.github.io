@@ -1,5 +1,6 @@
 <html><head><title>Fifteen Tutorial for Python and Pygame Zero 1.2</title>
 <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700" rel="stylesheet">
+<script src="../../jsgame0.js"></script>
 <style>
 body {
     font-family: Calibri, sans-serif;
@@ -124,7 +125,15 @@ h2 + h3 {
 <body>
 <div class="container">
 <p><a href="../../">Home page</a> > <a href="../">Pygame Zero tutorials</a></p><h1>Fifteen</h1><p class="subheading">A tutorial for Python and Pygame Zero 1.2</p><p>Please send any feedback to <a href="mailto:simple.game.tutorials@gmail.com">simple.game.tutorials@gmail.com</a></p><p><a href="fifteen.py" class="download">Download fifteen.py</a></p>
-<img src="1.png">
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
 <h2>Rules</h2>
 <p>There is a board with 15 pieces and an empty space. Move the pieces around until they are in sequential order by using the arrow keys to move pieces into the empty space.</p>
 <h3>Controls</h3>
@@ -506,4 +515,165 @@ def <span class="name">on_key_down</span>(<span class="name">key</span>):
     if <span class="highlight"><span class="call">is_complete</span>()</span>:
         <span class="call">reset</span>()
 </pre></div>
-</div></body></html>
+</div>
+
+<script>
+const GRID_X_COUNT = 4;
+const GRID_Y_COUNT = 4;
+
+WIDTH = 100 * GRID_X_COUNT;
+HEIGHT = 100 * GRID_Y_COUNT;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+function move(direction) {
+  let empty_x, empty_y, new_empty_x, new_empty_y, temp;
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      if (grid[y][x] === (GRID_X_COUNT * GRID_Y_COUNT)) {
+        empty_x = x;
+        empty_y = y;
+      }
+    }
+  }
+
+  new_empty_y = empty_y;
+  new_empty_x = empty_x;
+
+  if (direction === 'down') {
+    new_empty_y -= 1;
+  }
+  else if (direction === 'up') {
+    new_empty_y += 1;
+  }
+  else if (direction === 'right') {
+    new_empty_x -= 1;
+  }
+  else if (direction === 'left') {
+    new_empty_x += 1;
+  }
+
+  if (
+    (0 <= new_empty_y) && (new_empty_y < GRID_Y_COUNT) &&
+    (0 <= new_empty_x) && (new_empty_x < GRID_X_COUNT)
+  ) {
+   temp = grid[empty_y][empty_x];
+   grid[empty_y][empty_x] = grid[new_empty_y][new_empty_x];
+   grid[new_empty_y][new_empty_x] = temp;
+  }
+}
+
+function get_initial_value(x, y) {
+  return ((y * GRID_X_COUNT) + x + 1);
+}
+
+function is_complete() {
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      if (grid[y][x] !== get_initial_value(x, y)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+var grid;
+
+function reset() {
+  grid = [];
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    grid.push([]);
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      grid[y].push(get_initial_value(x, y));
+    }
+  }
+
+  while (true) {
+    for (let move_number = 0; move_number < 1000; move_number++) {
+      move(['down', 'up', 'right', 'left'][getRandomInteger(0, 4)]);
+    }
+
+    for (let move_number = 0; move_number < (GRID_X_COUNT - 1); move_number++) {
+      move('left');
+    }
+
+    for (let move_number = 0; move_number < (GRID_Y_COUNT - 1); move_number++) {
+      move('up');
+    }
+
+    if (!is_complete()) {
+      break;
+    }
+  }
+}
+
+function on_key_down(key) {
+  if (key === keys.DOWN) {
+    move('down');
+  }
+  else if (key === keys.UP) {
+    move('up');
+  }
+  else if (key === keys.RIGHT) {
+    move('right');
+  }
+  else if (key === keys.LEFT) {
+    move('left');
+  }
+  else if (key === keys.R) {
+    reset();
+  }
+
+  if (is_complete()) {
+    reset();
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      if (grid[y][x] === (GRID_X_COUNT * GRID_Y_COUNT)) {
+        continue;
+      }
+
+      let piece_size = 100;
+          piece_draw_size = piece_size - 1;
+
+      screen.draw.filled_rect(
+        new Rect(
+          x * piece_size, y * piece_size,
+          piece_draw_size, piece_draw_size
+        ),
+        [100, 20, 150]
+      );
+
+      screen.draw.text(
+        grid[y][x].toFixed(), {
+          pos: [x * piece_size, y * piece_size],
+          fontsize: 60
+        }
+      );
+    }
+  }
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
