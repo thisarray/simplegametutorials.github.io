@@ -1,5 +1,6 @@
 <html><head><title>Flowers Tutorial for Python and Pygame Zero 1.2</title>
 <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700" rel="stylesheet">
+<script src="../../jsgame0.js"></script>
 <style>
 body {
     font-family: Calibri, sans-serif;
@@ -119,12 +120,40 @@ h2 + h3 {
     font-size: 24px;
     margin-top: 0;
 }
+.hidden {
+  display: none;
+}
 </style>
 </head>
 <body>
+<section id="imageLoader" class="hidden">
+  <img class="hidden" src="images/covered.png" alt="covered" data-name="covered">
+  <img class="hidden" src="images/covered_highlighted.png" alt="covered_highlighted" data-name="covered_highlighted">
+  <img class="hidden" src="images/flag.png" alt="flag" data-name="flag">
+  <img class="hidden" src="images/flower.png" alt="flower" data-name="flower">
+  <img class="hidden" src="images/number1.png" alt="number1" data-name="number1">
+  <img class="hidden" src="images/number2.png" alt="number2" data-name="number2">
+  <img class="hidden" src="images/number3.png" alt="number3" data-name="number3">
+  <img class="hidden" src="images/number4.png" alt="number4" data-name="number4">
+  <img class="hidden" src="images/number5.png" alt="number5" data-name="number5">
+  <img class="hidden" src="images/number6.png" alt="number6" data-name="number6">
+  <img class="hidden" src="images/number7.png" alt="number7" data-name="number7">
+  <img class="hidden" src="images/number8.png" alt="number8" data-name="number8">
+  <img class="hidden" src="images/question.png" alt="question" data-name="question">
+  <img class="hidden" src="images/uncovered.png" alt="uncovered" data-name="uncovered">
+</section>
+
 <div class="container">
 <p><a href="../../">Home page</a> > <a href="../">Pygame Zero tutorials</a></p><h1>Flowers</h1><p class="subheading">A tutorial for Python and Pygame Zero 1.2</p><p>Please send any feedback to <a href="mailto:simple.game.tutorials@gmail.com">simple.game.tutorials@gmail.com</a></p><p><a href="flowers.zip" class="download">Download flowers.zip</a></p>
-<img src="1.png">
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
 <h2>Rules</h2>
 <p>The game starts with a grid of covered cells. Under some of the cells are flowers. The game is over when a flower is uncovered.</p>
 <p>Left clicking a cell uncovers it, and if none of its adjacent cells contain flowers, they are also uncovered, and for <i>those</i> uncovered cells, if none of <i>their</i> adjacent cells contain flowers, they are also uncovered, and so on.</p>
@@ -761,4 +790,250 @@ def <span class="name">on_mouse_up</span>(<span class="name">button</span>):
 
     <span class="comment"># etc.</span>
 </pre></div>
-</div></body></html>
+</div>
+
+<script>
+const CELL_SIZE = 18;
+
+const GRID_X_COUNT = 19;
+const GRID_Y_COUNT = 14;
+
+WIDTH = CELL_SIZE * GRID_X_COUNT;
+HEIGHT = CELL_SIZE * GRID_Y_COUNT;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+var grid, game_over, first_click, selected_x, selected_y;
+
+function reset() {
+  grid = [];
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    grid.push([]);
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      grid[y].push({
+        'flower': false,
+        'state': 'covered' // 'covered', 'uncovered', 'flag', 'question'
+      });
+    }
+  }
+
+  game_over = false;
+  first_click = true;
+
+  selected_x = 0;
+  selected_y = 0;
+}
+
+function get_surrounding_flower_count(x, y) {
+  let surrounding_flower_count = 0;
+
+  for (let dy = -1; dy < 2; dy++) {
+    for (let dx = -1; dx < 2; dx++) {
+      if (
+        (!((dy === 0) && (dx === 0)))
+        && ((0 <= (y + dy)) && ((y + dy) < grid.length))
+        && ((0 <= (x + dx)) && ((x + dx) < grid[y+dy].length))
+        && grid[y+dy][x+dx]['flower']
+      ) {
+        surrounding_flower_count += 1;
+      }
+    }
+  }
+
+  return surrounding_flower_count;
+}
+
+function on_mouse_move(pos, delta, buttons) {
+  selected_x = Math.floor(pos[0] / CELL_SIZE);
+  selected_y = Math.floor(pos[1] / CELL_SIZE);
+
+  if (selected_x > (GRID_X_COUNT - 1)) {
+    selected_x = GRID_X_COUNT - 1;
+  }
+  if (selected_y > (GRID_Y_COUNT - 1)) {
+    selected_y = GRID_Y_COUNT - 1;
+  }
+}
+
+function on_key_down(key) {
+  reset();
+}
+
+function on_mouse_down(pos, buttons) {
+  selected_x = Math.floor(pos[0] / CELL_SIZE);
+  selected_y = Math.floor(pos[1] / CELL_SIZE);
+
+  if (selected_x > (GRID_X_COUNT - 1)) {
+    selected_x = GRID_X_COUNT - 1;
+  }
+  if (selected_y > (GRID_Y_COUNT - 1)) {
+    selected_y = GRID_Y_COUNT - 1;
+  }
+
+  if (!game_over) {
+    if (((buttons & mouse.LEFT) > 0) && (grid[selected_y][selected_x]['state'] !== 'flag')) {
+      if (first_click) {
+        first_click = false;
+
+        let possible_flower_positions = [],
+            index, position;
+
+        for (let y = 0; y < GRID_Y_COUNT; y++) {
+          for (let x = 0; x < GRID_X_COUNT; x++) {
+            if (!((x === selected_x) && (y === selected_y))) {
+              possible_flower_positions.push({'x': x, 'y': y});
+            }
+          }
+        }
+
+        for (let flower_index = 0; flower_index < 40; flower_index++) {
+          index = getRandomInteger(0, possible_flower_positions.length);
+          position = possible_flower_positions[index];
+          possible_flower_positions.splice(index, 1);
+          grid[position['y']][position['x']]['flower'] = true;
+        }
+      }
+
+      if (grid[selected_y][selected_x]['flower']) {
+        grid[selected_y][selected_x]['state'] = 'uncovered';
+        game_over = true;
+      }
+      else {
+        let stack = [
+          {
+            'x': selected_x,
+            'y': selected_y
+          }
+        ],
+            current, x, y;
+
+        while (stack.length > 0) {
+          current = stack.pop();
+          x = current['x'];
+          y = current['y'];
+
+          grid[y][x]['state'] = 'uncovered';
+
+          if (get_surrounding_flower_count(x, y) === 0) {
+            for (let dy = -1; dy < 2; dy++) {
+              for (let dx = -1; dx < 2; dx++) {
+                if (
+                  (!((dy === 0) && (dx === 0)))
+                  && ((0 <= (y + dy)) && ((y + dy) < grid.length))
+                  && ((0 <= (x + dx)) && ((x + dx) < grid[y+dy].length))
+                  && ((grid[y+dy][x+dx]['state'] === 'covered') || (grid[y+dy][x+dx]['state'] === 'question'))
+                ) {
+                  stack.push({
+                    'x': x + dx,
+                    'y': y + dy
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        complete = true;
+
+        for (let y = 0; y < GRID_Y_COUNT; y++) {
+          for (let x = 0; x < GRID_X_COUNT; x++) {
+            if ((grid[y][x]['state'] !== 'uncovered') && (!grid[y][x]['flower'])) {
+              complete = false;
+            }
+          }
+        }
+
+        if (complete) {
+          game_over = true;
+        }
+      }
+    }
+
+    else if ((buttons & mouse.RIGHT) > 0) {
+      if (grid[selected_y][selected_x]['state'] === 'covered') {
+        grid[selected_y][selected_x]['state'] = 'flag';
+      }
+      else if (grid[selected_y][selected_x]['state'] === 'flag') {
+        grid[selected_y][selected_x]['state'] = 'question';
+      }
+      else if (grid[selected_y][selected_x]['state'] === 'question') {
+        grid[selected_y][selected_x]['state'] = 'covered';
+      }
+    }
+  }
+
+  else {
+    reset();
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  for (let y = 0; y < GRID_Y_COUNT; y++) {
+    for (let x = 0; x < GRID_X_COUNT; x++) {
+      function draw_cell(image, x, y) {
+        screen.blit(image, [x * CELL_SIZE, y * CELL_SIZE]);
+      }
+
+      if (grid[y][x]['state'] === 'uncovered') {
+        draw_cell('uncovered', x, y);
+      }
+      else {
+        if ((x === selected_x) && (y === selected_y) && (!game_over)) {
+          draw_cell('covered_highlighted', x, y);
+        }
+        else {
+          draw_cell('covered', x, y);
+        }
+      }
+
+      let surrounding_flower_count = 0;
+
+      for (let dy = -1; dy < 2; dy++) {
+        for (let dx = -1; dx < 2; dx++) {
+          if (
+            (!((dy === 0) && (dx === 0)))
+            && ((0 <= (y + dy)) && ((y + dy) < grid.length))
+            && ((0 <= (x + dx)) && ((x + dx) < grid[y+dy].length))
+            && grid[y+dy][x+dx]['flower']
+          ) {
+            surrounding_flower_count += 1;
+          }
+        }
+      }
+
+      if (grid[y][x]['flower'] && game_over) {
+        draw_cell('flower', x, y);
+      }
+      else if ((get_surrounding_flower_count(x, y) > 0) && (grid[y][x]['state'] === 'uncovered')) {
+        draw_cell('number' + get_surrounding_flower_count(x, y), x, y);
+      }
+
+      if (grid[y][x]['state'] === 'flag') {
+        draw_cell('flag', x, y);
+      }
+      else if (grid[y][x]['state'] === 'question') {
+        draw_cell('question', x, y);
+      }
+    }
+  }
+}
+
+window.addEventListener('load', (event) => {
+  images.LOAD('#imageLoader img');
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
