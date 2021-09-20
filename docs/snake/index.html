@@ -1,5 +1,6 @@
 <html><head><title>Snake Tutorial for Python and Pygame Zero 1.2</title>
 <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700" rel="stylesheet">
+<script src="../../jsgame0.js"></script>
 <style>
 body {
     font-family: Calibri, sans-serif;
@@ -124,7 +125,15 @@ h2 + h3 {
 <body>
 <div class="container">
 <p><a href="../../">Home page</a> > <a href="../">Pygame Zero tutorials</a></p><h1>Snake</h1><p class="subheading">A tutorial for Python and Pygame Zero 1.2</p><p>Please send any feedback to <a href="mailto:simple.game.tutorials@gmail.com">simple.game.tutorials@gmail.com</a></p><p><a href="snake.py" class="download">Download snake.py</a></p>
-<img src="1.png">
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
 <h2>Rules</h2>
 <p>Eating food makes the snake grow. When the food is eaten it moves to another random position.</p>
 <p>The snake will wrap around to the other side of the screen when it goes off the edge.</p>
@@ -617,4 +626,199 @@ def <span class="name">update</span>(<span class="name">dt</span>):
     <span class="comment"># etc.</span>
 </pre></div>
 <img src="12.png">
-</div></body></html>
+</div>
+
+<script>
+const CELL_SIZE = 15;
+const GRID_X_COUNT = 20;
+const GRID_Y_COUNT = 15;
+
+WIDTH = CELL_SIZE * GRID_X_COUNT;
+HEIGHT = CELL_SIZE * GRID_Y_COUNT;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+function move_food() {
+  let possible_food_positions = [],
+      possible = false;
+
+  for (let food_x = 0; food_x < GRID_X_COUNT; food_x++) {
+    for (let food_y = 0; food_y < GRID_Y_COUNT; food_y++) {
+      possible = true;
+
+      for (let segment of snake_segments) {
+        if ((food_x === segment['x']) && (food_y === segment['y'])) {
+          possible = false;
+        }
+      }
+
+      if (possible) {
+        possible_food_positions.push({'x': food_x, 'y': food_y});
+      }
+    }
+  }
+
+  food_position = possible_food_positions[getRandomInteger(0, possible_food_positions.length)];
+}
+
+var food_position, timer, direction_queue, snake_segments, snake_alive;
+
+function reset() {
+  timer = 0;
+  direction_queue = ['right'];
+  snake_segments = [
+    {'x': 2, 'y': 0},
+    {'x': 1, 'y': 0},
+    {'x': 0, 'y': 0}
+  ];
+  move_food();
+  snake_alive = true;
+}
+
+function update(dt) {
+  timer += dt;
+
+  if (snake_alive) {
+    if (timer >= 0.15) {
+      timer = 0;
+
+      if (direction_queue.length > 1) {
+        direction_queue.shift();
+      }
+
+      let next_x_position = snake_segments[0]['x'],
+          next_y_position = snake_segments[0]['y'],
+          can_move = true;
+
+      if (direction_queue[0] === 'right') {
+        next_x_position += 1;
+        if (next_x_position >= GRID_X_COUNT) {
+          next_x_position = 0;
+        }
+      }
+
+      else if (direction_queue[0] === 'left') {
+        next_x_position -= 1;
+        if (next_x_position < 0) {
+          next_x_position = GRID_X_COUNT - 1;
+        }
+      }
+
+      else if (direction_queue[0] === 'down') {
+        next_y_position += 1;
+        if (next_y_position >= GRID_Y_COUNT) {
+          next_y_position = 0;
+        }
+      }
+
+      else if (direction_queue[0] === 'up') {
+        next_y_position -= 1;
+        if (next_y_position < 0) {
+          next_y_position = GRID_Y_COUNT - 1;
+        }
+      }
+
+      can_move = true;
+
+      for (let segment of snake_segments.slice(0, -1)) {
+        if ((next_x_position === segment['x'])
+          && (next_y_position === segment['y'])) {
+          can_move = false;
+        }
+      }
+
+      if (can_move) {
+        snake_segments.unshift({'x': next_x_position, 'y': next_y_position});
+
+        if ((snake_segments[0]['x'] === food_position['x'])
+          && (snake_segments[0]['y'] === food_position['y'])) {
+          move_food();
+        }
+        else {
+          snake_segments.pop();
+        }
+      }
+      else {
+        snake_alive = false;
+      }
+    }
+  }
+
+  else if (timer >= 2) {
+    reset();
+  }
+}
+
+function on_key_down(key) {
+  if ((key === keys.RIGHT)
+    && (direction_queue[direction_queue.length-1] !== 'right')
+    && (direction_queue[direction_queue.length-1] !== 'left')) {
+    direction_queue.push('right');
+  }
+
+  else if ((key === keys.LEFT)
+    && (direction_queue[direction_queue.length-1] !== 'left')
+    && (direction_queue[direction_queue.length-1] !== 'right')) {
+    direction_queue.push('left');
+  }
+
+  else if ((key === keys.DOWN)
+    && (direction_queue[direction_queue.length-1] !== 'down')
+    && (direction_queue[direction_queue.length-1] !== 'up')) {
+    direction_queue.push('down');
+  }
+
+  else if ((key === keys.UP)
+    && (direction_queue[direction_queue.length-1] !== 'up')
+    && (direction_queue[direction_queue.length-1] !== 'down')) {
+    direction_queue.push('up');
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  screen.draw.filled_rect(
+    new Rect(
+      0, 0,
+      GRID_X_COUNT * CELL_SIZE, GRID_Y_COUNT * CELL_SIZE
+    ),
+    [70, 70, 70]
+  );
+
+  function draw_cell(x, y, color) {
+    screen.draw.filled_rect(
+      new Rect(
+        x * CELL_SIZE, y * CELL_SIZE,
+        CELL_SIZE - 1, CELL_SIZE - 1
+      ),
+      color
+    );
+  }
+
+  for (let segment of snake_segments) {
+    let color = [165, 255, 81];
+    if (!snake_alive) {
+      color = [140, 140, 140];
+    }
+    draw_cell(segment['x'], segment['y'], color);
+  }
+
+  draw_cell(food_position['x'], food_position['y'], [255, 76, 76]);
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
