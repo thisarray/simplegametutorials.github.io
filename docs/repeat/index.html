@@ -1,5 +1,6 @@
 <html><head><title>Repeat Tutorial for Python and Pygame Zero 1.2</title>
 <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700" rel="stylesheet">
+<script src="../../jsgame0.js"></script>
 <style>
 body {
     font-family: Calibri, sans-serif;
@@ -124,7 +125,15 @@ h2 + h3 {
 <body>
 <div class="container">
 <p><a href="../../">Home page</a> > <a href="../">Pygame Zero tutorials</a></p><h1>Repeat</h1><p class="subheading">A tutorial for Python and Pygame Zero 1.2</p><p>Please send any feedback to <a href="mailto:simple.game.tutorials@gmail.com">simple.game.tutorials@gmail.com</a></p><p><a href="repeat.py" class="download">Download repeat.py</a></p>
-<img src="1.png">
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
 <h2>Rules</h2>
 <p>Watch as a sequence of numbers flash.</p>
 <p>Repeat the sequence using the number keys.</p>
@@ -544,4 +553,132 @@ def <span class="name">draw</span>():
     <span class="highlight"><span class="comment"># Removed: screen.draw.text('flashing: ' + str(flashing), (20, 220))</span></span>
 </pre></div>
 <img src="9.png">
-</div></body></html>
+</div>
+
+<script>
+WIDTH = 530;
+HEIGHT = 400;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+function add_to_sequence() {
+  sequence.push(getRandomInteger(1, 5));
+}
+
+var sequence, current, timer, state, flashing;
+
+function reset() {
+  sequence = [];
+  add_to_sequence();
+  current = 0;
+  timer = 0;
+  state = 'watch'; // 'watch', 'repeat', 'gameover'
+  flashing = false;
+}
+
+function update(dt) {
+  if (state === 'watch') {
+    timer += dt;
+    if (timer >= 0.5) {
+      timer = 0;
+      flashing = !flashing;
+      if (!flashing) {
+        current += 1;
+        if (current === sequence.length) {
+          state = 'repeat';
+          current = 0;
+        }
+      }
+    }
+  }
+}
+
+function on_key_down(key) {
+  if (state === 'repeat') {
+    if ((key === keys.K_1) || (key === keys.K_2) || (key === keys.K_3) || (key === keys.K_4)) {
+      let number = 0;
+      if (key === keys.K_1) {
+        number = 1;
+      }
+      else if (key === keys.K_2) {
+        number = 2;
+      }
+      else if (key === keys.K_3) {
+        number = 3;
+      }
+      else if (key === keys.K_4) {
+        number = 4;
+      }
+
+      if (number === sequence[current]) {
+        current += 1;
+        if (current === sequence.length) {
+          current = 0;
+          add_to_sequence();
+          state = 'watch';
+        }
+      }
+      else {
+        state = 'gameover';
+      }
+    }
+  }
+  else if (state === 'gameover') {
+    reset();
+  }
+}
+
+function draw() {
+  screen.fill([0, 0, 0]);
+
+  function draw_square(number, color, color_flashing) {
+    let square_size = 50,
+        square_color;
+    if ((state === 'watch') && flashing && (number === sequence[current])) {
+      square_color = color_flashing;
+    }
+    else {
+      square_color = color;
+    }
+
+    screen.draw.filled_rect(
+      new Rect(square_size * (number - 1), 0, square_size, square_size),
+      square_color
+    );
+    screen.draw.text(number.toFixed(), {
+      pos: [(square_size * (number - 1)) + 21, 18]
+    });
+  }
+
+  draw_square(1, [50, 0, 0], [255, 0, 0]);
+  draw_square(2, [0, 50, 0], [0, 255, 0]);
+  draw_square(3, [0, 0, 50], [0, 0, 255]);
+  draw_square(4, [50, 50, 0], [255, 255, 0]);
+
+  if (state === 'repeat') {
+    screen.draw.text((current + 1) + '/' + sequence.length, {
+      pos: [20, 60]
+    });
+  }
+  else if (state === 'gameover') {
+    screen.draw.text('Game over!', {
+      pos: [20, 60]
+    });
+  }
+}
+
+window.addEventListener('load', (event) => {
+  reset();
+  screen.set_mode('#screen', '#reset', '#pause');
+});
+</script>
+</body>
+
+</html>
