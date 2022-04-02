@@ -65,8 +65,8 @@ def <span class="name">on_key_down</span>():
             for <span class="name">dy</span> in <span class="call">range</span>(-<span class="literal">1</span>, <span class="literal">2</span>):
                 for <span class="name">dx</span> in <span class="call">range</span>(-<span class="literal">1</span>, <span class="literal">2</span>):
                     if (not (<span class="name">dy</span> == <span class="literal">0</span> and <span class="name">dx</span> == <span class="literal">0</span>)
-                        and (<span class="highlight"><span class="name">y</span></span> + <span class="name">dy</span>) < <span class="call">len</span>(<span class="name">grid</span>)
-                        and (<span class="highlight"><span class="name">x</span></span> + <span class="name">dx</span>) < <span class="call">len</span>(<span class="name">grid</span>[<span class="highlight"><span class="name">y</span></span> + <span class="name">dy</span>])
+                        and <span class="literal">0</span> <= (<span class="highlight"><span class="name">y</span></span> + <span class="name">dy</span>) < <span class="name">grid_y_count</span>
+                        and <span class="literal">0</span> <= (<span class="highlight"><span class="name">x</span></span> + <span class="name">dx</span>) < <span class="name">grid_x_count</span>
                         and <span class="name">grid</span>[<span class="highlight"><span class="name">y</span></span> + <span class="name">dy</span>][<span class="highlight"><span class="name">x</span></span> + <span class="name">dx</span>]):
 
                         <span class="name">neighbor_count</span> += <span class="literal">1</span>
