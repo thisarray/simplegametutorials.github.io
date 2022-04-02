@@ -43,3 +43,6 @@ a:hover {
 .screenshot {
     max-height: 200px;
 }
+.tutorial {
+    margin: 45px 0;
+}
