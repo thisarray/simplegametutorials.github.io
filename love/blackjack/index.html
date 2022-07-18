@@ -608,6 +608,7 @@ end
 <img src="14.png">
 <h3>Loading images</h3>
 <p>All of the images used for drawing cards are loaded into a table.</p>
+<p>You can access the image files used in this tutorial by downloading the .love file linked to at the top of this page, then unzipping it by renaming the extension from .love to .zip, or by using 7-Zip and right clicking on the .love file and extracting it.</p>
 <p><a class="fullcodelink" target="_blank" href="19.html">Full code at this point</a></p><div class="pre"><pre class="code">function <span class="name">love.load</span>()
     <span class="name">images</span> = {}
     for <span class="name">nameIndex</span>, <span class="name">name</span> in <span class="call">ipairs</span>({
@@ -738,7 +739,7 @@ end
 
         <span class="call">love.graphics.draw</span>(
             <span class="name">images</span>[<span class="name">card.rank</span>],
-            <span class="name">x</span> + <span class="highlight"><span class="name">numberOffsetY</span></span>,
+            <span class="name">x</span> + <span class="highlight"><span class="name">numberOffsetX</span></span>,
             <span class="name">y</span> + <span class="highlight"><span class="name">numberOffsetY</span></span>
         )
         <span class="highlight"><span class="call">love.graphics.draw</span>(</span>
