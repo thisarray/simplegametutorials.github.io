@@ -660,7 +660,7 @@ function draw() {
       );
 
       screen.draw.text(
-        grid[y][x].toFixed(), {
+        grid[y][x].toFixed(0), {
           pos: [x * piece_size, y * piece_size],
           fontsize: 60
         }
@@ -670,8 +670,7 @@ function draw() {
 }
 
 window.addEventListener('load', (event) => {
-  reset();
-  screen.set_mode('#screen', '#reset', '#pause');
+  screen.init();
 });
 </script>
 </body>

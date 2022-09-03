@@ -992,14 +992,13 @@ function draw() {
   draw_pipe(pipe_1_x, pipe_1_space_y);
   draw_pipe(pipe_2_x, pipe_2_space_y);
 
-  screen.draw.text(score.toFixed(), {
+  screen.draw.text(score.toFixed(0), {
     pos: [15, 15]
   });
 }
 
 window.addEventListener('load', (event) => {
-  reset();
-  screen.set_mode('#screen', '#reset', '#pause');
+  screen.init();
 });
 </script>
 </body>

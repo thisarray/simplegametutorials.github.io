@@ -229,7 +229,7 @@ function draw() {
       new Rect(square_size * (number - 1), 0, square_size, square_size),
       square_color
     );
-    screen.draw.text(number.toFixed(), {
+    screen.draw.text(number.toFixed(0), {
       pos: [(square_size * (number - 1)) + 21, 18]
     });
   }
@@ -252,8 +252,7 @@ function draw() {
 }
 
 window.addEventListener('load', (event) => {
-  reset();
-  screen.set_mode('#screen', '#reset', '#pause');
+  screen.init();
 });
 </script>
 </body>
